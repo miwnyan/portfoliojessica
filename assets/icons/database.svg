@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Banco de dados</title>
+  <ellipse cx="12" cy="5.2" rx="8" ry="3.2" stroke="#efadd0" stroke-width="1.8"/>
+  <path d="M4 5.2v6.8c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V5.2M4 12v6.8c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V12" stroke="#efadd0" stroke-width="1.8"/>
+</svg>

@@ -1,0 +1,24 @@
+{
+  "name": "portfolio-jessica",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Portfólio editável com painel administrativo, Firebase e Cloudinary.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "^13.0.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

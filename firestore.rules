@@ -1,0 +1,218 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: portfolio
+// Document ID: public (the only client-accessible document)
+// Fields:
+//   - schemaVersion: int (required, 1..1000)
+//   - settings: map (required, fixed set of nested section maps)
+//     - meta: title, description, ogTitle, ogDescription, faviconUrl,
+//       themeColor
+//     - navigation: home, about, projects, contact
+//     - hero: eyebrow, intro, name, subtitle, description, primaryLabel,
+//       secondaryLabel
+//     - about: title, paragraphs[], bunnyAnimatedUrl, bunnyStaticUrl,
+//       bunnyAlt
+//     - sections: skillsTitle, skillsIntro, experienceTitle, projectsTitle,
+//       projectsIntro, contactTitle
+//     - contact: formTitle, nameLabel, emailLabel, messageLabel,
+//       submitLabel, destinationEmail, infoTitle, infoText, services[],
+//       socialTitle
+//     - footer: name, tagline, backLabel, copyrightName, credit
+//     - ui: visible interface labels plus experienceCollapsedCount
+//     - theme: the eleven color tokens plus radius
+//   - projects: list (required, at most 100)
+//     Each normalized item has id, order, visible, name, summary,
+//     description, technologies[], coverUrl, coverPublicId, repositoryUrl,
+//     homepageUrl, source and github{owner,repo,fullName,defaultBranch,
+//     language,topics[]}.
+//   - experiences: list (required, at most 100)
+//     Each normalized item has id, order, visible, period, startDate,
+//     endDate, title, institution and description.
+//   - folders: list (required, at most 50)
+//     Each normalized item has id, order, visible, name, color, colorDeep
+//     and openByDefault.
+//   - skills: list (required, at most 500)
+//     Each normalized item has id, folderId, order, visible, name, title,
+//     badge, status, iconId, iconUrl, description and details[].
+//   - contacts: list (required, at most 100)
+//     Each normalized item has id, order, visible, type, label, url,
+//     iconId, iconUrl, ariaLabel and title.
+//   - createdAt: timestamp (required and immutable after creation; a legacy
+//     document without it may set it once to request.time during migration)
+//   - updatedAt: timestamp (required, must equal request.time)
+//
+// Collection: admins
+// Document ID: Firebase Authentication UID
+// Fields:
+//   - active: bool (required for authorization and must be true)
+//   - disabled: bool (optional; when true, access is denied)
+//   - any additional console/server-managed fields are private to that UID
+//
+// Important limitation of this single-document model:
+// Firestore Rules cannot iterate over arbitrary lists. The rules can bound
+// the entity arrays and validate their container type, while the application
+// normalizes each entity before writing. Per-entity server-side validation
+// would require moving entities to individual documents/subcollections.
+//
+// The portfolio document is intentionally public and must contain only data
+// meant to be displayed on the public website. Never store private credentials
+// or non-public personal data in portfolio/public.
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // =============================================================
+    // Authentication and authorization helpers
+    // =============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Generic UID integrity helpers retained for future user-owned models.
+    // The current public portfolio document deliberately has no owner field.
+    function uidUnchanged(data) {
+      return !('uid' in data) ||
+        (isAuthenticated() && data.uid == request.auth.uid);
+    }
+
+    function uidNotModified(newData, oldData) {
+      return !('uid' in newData) ||
+        (('uid' in oldData) && newData.uid == oldData.uid);
+    }
+
+    function adminDocumentPath() {
+      return /databases/$(database)/documents/admins/$(request.auth.uid);
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(adminDocumentPath()) &&
+        get(adminDocumentPath()).data.active == true &&
+        (!('disabled' in get(adminDocumentPath()).data) ||
+          get(adminDocumentPath()).data.disabled == false);
+    }
+
+    // =============================================================
+    // Primitive validators
+    // =============================================================
+
+    function hasExactKeys(data, fields) {
+      return data is map &&
+        data.keys().hasAll(fields) &&
+        data.keys().hasOnly(fields);
+    }
+
+    // Firestore Rules has no generic every()/loop operation. This helper
+    // deliberately validates the list container and a realistic item count;
+    // individual entity maps are normalized by data-service.js before writes.
+    function isBoundedList(value, maximum) {
+      return value is list && value.size() <= maximum;
+    }
+
+    function isValidSettings(data) {
+      return hasExactKeys(data, [
+          'meta', 'navigation', 'hero', 'about', 'sections', 'contact',
+          'footer', 'ui', 'theme'
+        ]) &&
+        data.meta is map &&
+        data.navigation is map &&
+        data.hero is map &&
+        data.about is map &&
+        data.sections is map &&
+        data.contact is map &&
+        data.footer is map &&
+        data.ui is map &&
+        data.theme is map &&
+        isBoundedList(data.about.paragraphs, 50) &&
+        isBoundedList(data.contact.services, 50) &&
+        data.ui.experienceCollapsedCount is int &&
+        data.ui.experienceCollapsedCount >= 1 &&
+        data.ui.experienceCollapsedCount <= 50;
+    }
+
+    // =============================================================
+    // Portfolio validators (called on BOTH create and update)
+    // =============================================================
+
+    function isValidPortfolio(data) {
+      return data is map &&
+        data.keys().hasAll([
+          'schemaVersion', 'settings', 'projects', 'experiences', 'folders',
+          'skills', 'contacts', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'schemaVersion', 'settings', 'projects', 'experiences', 'folders',
+          'skills', 'contacts', 'createdAt', 'updatedAt'
+        ]) &&
+        data.schemaVersion is int &&
+        data.schemaVersion >= 1 &&
+        data.schemaVersion <= 1000 &&
+        isValidSettings(data.settings) &&
+        isBoundedList(data.projects, 100) &&
+        isBoundedList(data.experiences, 100) &&
+        isBoundedList(data.folders, 50) &&
+        isBoundedList(data.skills, 500) &&
+        isBoundedList(data.contacts, 100) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPortfolioCreate(data) {
+      return isValidPortfolio(data) &&
+        uidUnchanged(data) &&
+        data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidPortfolioUpdate(newData, oldData) {
+      return isValidPortfolio(newData) &&
+        uidNotModified(newData, oldData) &&
+        newData.updatedAt == request.time &&
+        ((('createdAt' in oldData) &&
+            newData.createdAt == oldData.createdAt) ||
+          (!('createdAt' in oldData) &&
+            newData.createdAt == request.time));
+    }
+
+    // =============================================================
+    // Access policy
+    // =============================================================
+
+    match /portfolio/public {
+      // Explicit product requirement: the published portfolio is readable by
+      // anyone, but the collection itself cannot be queried/listed.
+      allow get: if true;
+      allow list: if false;
+
+      allow create: if isAdmin() &&
+        isValidPortfolioCreate(request.resource.data);
+      allow update: if isAdmin() &&
+        isValidPortfolioUpdate(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    match /admins/{uid} {
+      // A signed-in user may only check their own allowlist record. Admin
+      // records are bootstrapped and maintained in the Firebase Console or by
+      // a trusted server; no browser client may create or modify privileges.
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // Explicit default deny also covers every subcollection and unexpected
+    // future path until a reviewed rule grants the minimum required access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

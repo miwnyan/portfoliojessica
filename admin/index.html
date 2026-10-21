@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#09080a">
+  <title>Painel administrativo | Jéssica</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <a id="admin-skip-link" class="skip-link" href="#admin-main" hidden>Ir para o conteúdo</a>
+
+  <div id="boot-view" class="boot-view" role="status" aria-live="polite">
+    <span class="boot-mark" aria-hidden="true">J</span>
+    <p>Preparando o painel…</p>
+  </div>
+
+  <main id="login-view" class="login-view" hidden>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-character" aria-hidden="true">
+        <span class="login-orbit"></span>
+        <img src="../assets/coelhinho-estatico.png" alt="" width="200" height="200">
+      </div>
+      <div class="login-panel">
+        <a class="login-brand" href="../" aria-label="Voltar ao portfólio de Jéssica">Jéssica</a>
+        <p class="login-kicker">Área reservada</p>
+        <h1 id="login-title">Entrar no painel</h1>
+        <p class="login-intro">Use o e-mail e a senha cadastrados no Firebase para editar o portfólio.</p>
+
+        <form id="login-form" class="login-form" novalidate>
+          <div class="field">
+            <label for="login-email">E-mail</label>
+            <input id="login-email" name="email" type="email" autocomplete="username" inputmode="email" required>
+          </div>
+          <div class="field">
+            <label for="login-password">Senha</label>
+            <div class="password-field">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" minlength="6" required>
+              <button id="toggle-password" class="text-button password-toggle" type="button" aria-pressed="false">Mostrar</button>
+            </div>
+          </div>
+          <p id="login-error" class="form-message form-message-error" role="alert" hidden></p>
+          <button id="login-submit" class="button button-primary button-wide" type="submit">Entrar</button>
+        </form>
+        <a class="back-link" href="../">Voltar ao portfólio</a>
+      </div>
+    </section>
+  </main>
+
+  <main id="setup-view" class="login-view" hidden>
+    <section class="setup-card" aria-labelledby="setup-title">
+      <span class="setup-icon" aria-hidden="true">!</span>
+      <p class="login-kicker">Configuração necessária</p>
+      <h1 id="setup-title">Conecte o Firebase</h1>
+      <p>Preencha as variáveis do arquivo <code>.env</code> com as credenciais do projeto e reinicie o servidor.</p>
+      <a class="button button-outline" href="../">Voltar ao portfólio</a>
+    </section>
+  </main>
+
+  <div id="admin-app" class="admin-app" hidden>
+    <div id="sidebar-scrim" class="sidebar-scrim" aria-hidden="true"></div>
+    <aside id="admin-sidebar" class="admin-sidebar" aria-label="Navegação do painel">
+      <div class="sidebar-heading">
+        <a class="admin-brand" href="../" aria-label="Abrir o portfólio">
+          <span class="admin-brand-name">Jéssica</span>
+          <span class="admin-brand-note">painel</span>
+        </a>
+        <button id="close-sidebar" class="icon-button sidebar-close" type="button" aria-label="Fechar menu">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+
+      <nav id="admin-nav" class="admin-nav" aria-label="Seções do painel">
+        <button class="admin-nav-item is-active" type="button" data-section="overview" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">⌂</span><span>Visão geral</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="page">
+          <span class="nav-icon" aria-hidden="true">Aa</span><span>Textos da página</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="projects">
+          <span class="nav-icon" aria-hidden="true">◇</span><span>Projetos</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="experiences">
+          <span class="nav-icon" aria-hidden="true">◷</span><span>Experiência</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="folders">
+          <span class="nav-icon" aria-hidden="true">▰</span><span>Pastas e habilidades</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="contact">
+          <span class="nav-icon" aria-hidden="true">@</span><span>Contato e links</span>
+        </button>
+        <button class="admin-nav-item" type="button" data-section="appearance">
+          <span class="nav-icon" aria-hidden="true">◉</span><span>Aparência e mídia</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="signed-user">
+          <span class="user-avatar" aria-hidden="true">J</span>
+          <span>
+            <strong>Administradora</strong>
+            <small id="user-email">—</small>
+          </span>
+        </div>
+        <button id="logout-button" class="text-button logout-button" type="button">Sair</button>
+      </div>
+    </aside>
+
+    <div class="admin-workspace">
+      <header class="admin-topbar">
+        <div class="topbar-start">
+          <button id="open-sidebar" class="icon-button menu-button" type="button" aria-label="Abrir menu" aria-controls="admin-sidebar" aria-expanded="false">
+            <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+          </button>
+          <div>
+            <p id="section-context" class="section-context">Painel</p>
+            <h1 id="section-title" class="topbar-title">Visão geral</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="save-state" class="save-state" data-state="saved">Tudo salvo</span>
+          <a class="button button-quiet view-site-button" href="../" target="_blank" rel="noopener noreferrer">Ver site</a>
+          <button id="save-button" class="button button-primary" type="button" disabled>Salvar alterações</button>
+        </div>
+      </header>
+
+      <main id="admin-main" class="admin-main" tabindex="-1">
+        <div id="section-content" class="section-content" aria-live="polite"></div>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="entity-dialog" class="admin-dialog" aria-labelledby="entity-dialog-title">
+    <form id="entity-form" method="dialog" novalidate>
+      <header class="dialog-header">
+        <div>
+          <p id="entity-dialog-kicker" class="dialog-kicker"></p>
+          <h2 id="entity-dialog-title">Editar item</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="entity-dialog" aria-label="Fechar">×</button>
+      </header>
+      <div id="entity-form-fields" class="dialog-body"></div>
+      <footer class="dialog-actions">
+        <button class="button button-quiet" type="button" data-close-dialog="entity-dialog">Cancelar</button>
+        <button id="entity-submit" class="button button-primary" type="submit">Aplicar alterações</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="github-dialog" class="admin-dialog admin-dialog-small" aria-labelledby="github-dialog-title">
+    <form id="github-form" novalidate>
+      <header class="dialog-header">
+        <div>
+          <p class="dialog-kicker">Projeto público</p>
+          <h2 id="github-dialog-title">Importar do GitHub</h2>
+        </div>
+        <button class="icon-button dialog-close" type="button" data-close-dialog="github-dialog" aria-label="Fechar">×</button>
+      </header>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="github-repository">URL ou dono/repositório</label>
+          <input id="github-repository" name="repository" type="text" placeholder="https://github.com/usuario/projeto" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+          <small>O repositório precisa ser público.</small>
+        </div>
+        <div id="github-preview" class="github-preview" aria-live="polite" hidden></div>
+        <div id="github-description-field" class="field" hidden>
+          <label for="github-description">Descrição para o portfólio</label>
+          <textarea id="github-description" name="description" rows="5" maxlength="1200" required></textarea>
+        </div>
+        <p id="github-error" class="form-message form-message-error" role="alert" hidden></p>
+      </div>
+      <footer class="dialog-actions">
+        <button class="button button-quiet" type="button" data-close-dialog="github-dialog">Cancelar</button>
+        <button id="github-submit" class="button button-primary" type="submit">Buscar repositório</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="admin-dialog confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="confirm-mark" aria-hidden="true">!</div>
+    <h2 id="confirm-title">Confirmar ação</h2>
+    <p id="confirm-message"></p>
+    <div class="dialog-actions">
+      <button id="confirm-cancel" class="button button-quiet" type="button">Cancelar</button>
+      <button id="confirm-accept" class="button button-danger" type="button">Confirmar</button>
+    </div>
+  </dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <p id="global-status" class="sr-only" role="status" aria-live="polite"></p>
+
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>

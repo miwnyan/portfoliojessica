@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="title">
+  <title id="title">Microsoft</title>
+  <path fill="#f35325" d="M2 2h9.3v9.3H2z"/>
+  <path fill="#81bc06" d="M12.7 2H22v9.3h-9.3z"/>
+  <path fill="#05a6f0" d="M2 12.7h9.3V22H2z"/>
+  <path fill="#ffba08" d="M12.7 12.7H22V22h-9.3z"/>
+</svg>

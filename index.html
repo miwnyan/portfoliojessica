@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09080a">
+  <meta name="description" content="Portfólio de Jéssica. Desenvolvimento de sistemas, redes de computadores e segurança cibernética.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Jéssica | Portfólio">
+  <meta property="og:description" content="Projetos, habilidades e experiência profissional.">
+  <title>Jéssica | Portfólio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="/js/warp-text.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <header class="site-header" id="topo">
+    <div class="container header-inner">
+      <a href="#inicio" class="brand" id="brand-link" aria-label="Jéssica - início">
+        <span id="brand-name" class="brand-name shiny-text" aria-hidden="true">Jéssica</span>
+      </a>
+      <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Navegação principal">
+        <a href="#inicio" class="nav-link active" data-nav="home">Início</a>
+        <a href="#sobre" class="nav-link" data-nav="about">Sobre</a>
+        <a href="#projetos" class="nav-link" data-nav="projects">Projetos</a>
+        <a href="#contato" class="nav-link" data-nav="contact">Contato</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section id="inicio" class="hero section-anchor">
+      <div class="container hero-content section-shell">
+        <span id="hero-eyebrow" class="eyebrow hero-item">Portfólio pessoal</span>
+        <h1 class="hero-item hero-title" aria-label="Olá, eu sou a Jéssica"><span id="typed-hero" class="typed-hero" data-text="Olá, eu sou a "></span><span id="typed-name" class="typed-name" data-text="Jéssica" aria-hidden="true"></span></h1>
+        <h2 id="hero-subtitle" class="hero-item">Desenvolvimento de Sistemas</h2>
+        <p id="hero-description" class="hero-description hero-item">Técnica em Redes de Computadores e estudante de Análise e Desenvolvimento de Sistemas, com formação em Segurança Cibernética.</p>
+        <div class="hero-actions hero-item">
+          <a id="hero-primary" class="btn btn-primary" href="#projetos">Ver projetos</a>
+          <a id="hero-secondary" class="btn btn-outline" href="#contato">Entrar em contato</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="sobre" class="about-section section-anchor">
+      <div class="container section-shell">
+        <div class="about-overview">
+          <div class="about-copy reveal" data-reveal="left">
+            <h2 id="about-title" class="section-title">Sobre mim</h2>
+            <div id="about-paragraphs">
+              <p>Sou técnica em Redes de Computadores pela Firjan SENAI Maracanã, com formação complementar em segurança cibernética e experiência em projetos práticos.</p>
+              <p>Atualmente curso Análise e Desenvolvimento de Sistemas na PUCPR e desenvolvo projetos voltados à programação, automação e tecnologia.</p>
+              <p>Participei da preparação técnica da WorldSkills na modalidade Segurança Cibernética.</p>
+            </div>
+          </div>
+          <div class="bunny-scene reveal" data-reveal="right">
+            <picture class="bunny-picture">
+              <source id="bunny-static" media="(prefers-reduced-motion: reduce)" srcset="assets/coelhinho-estatico.png">
+              <img id="bunny-image" src="assets/coelhinho.gif" alt="Coelhinho rosa em pixel art" width="200" height="200" class="pixel-bunny" loading="lazy">
+            </picture>
+          </div>
+        </div>
+
+        <div class="skills-block reveal" data-reveal="up">
+          <div class="skills-heading">
+            <h3 id="skills-title" class="subsection-title">Habilidades &amp; Tecnologias</h3>
+            <p id="skills-intro">Fique a vontade para abrir as pastas e explorar as tecnologias que domino.</p>
+          </div>
+          <div id="skills-grid" class="skills-grid" aria-live="polite"></div>
+        </div>
+
+        <div class="experience-block reveal" data-reveal="up">
+          <h3 id="experience-title" class="subsection-title">Experiência</h3>
+          <div id="experience-timeline" class="timeline"></div>
+          <button id="experience-toggle" class="btn btn-outline experience-toggle" type="button" aria-expanded="false" aria-controls="experience-timeline" hidden></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="projetos" class="projects-section section-anchor">
+      <div class="container section-shell">
+        <div class="section-heading reveal" data-reveal="up">
+          <h2 id="projects-title" class="section-title">Meus Projetos</h2>
+          <p id="projects-intro">Projetos publicados no GitHub.</p>
+        </div>
+        <div id="projects-grid" class="projects-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="contato" class="contact-section section-anchor">
+      <div class="container section-shell">
+        <div class="section-heading reveal" data-reveal="up"><h2 id="contact-title" class="section-title">Entre em contato</h2></div>
+        <div class="contact-grid">
+          <div class="contact-form-panel reveal" data-reveal="left">
+            <h3 id="contact-form-title">Envie uma mensagem</h3>
+            <form id="contact-form">
+              <label id="contact-name-label" for="contact-name">Nome</label>
+              <input id="contact-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" required>
+              <label id="contact-email-label" for="contact-email">E-mail</label>
+              <input id="contact-email" name="email" type="email" autocomplete="email" maxlength="200" required>
+              <label id="contact-message-label" for="contact-message">Mensagem</label>
+              <textarea id="contact-message" name="message" rows="4" maxlength="3000" required></textarea>
+              <button id="contact-submit" type="submit" class="btn btn-primary submit-btn">Enviar mensagem</button>
+              <p id="contact-status" class="contact-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+          <div class="contact-side reveal" data-reveal="right">
+            <div class="contact-info-panel hover-rise">
+              <h3 id="contact-info-title">Sobre meu trabalho</h3>
+              <p id="contact-info-text">Desenvolvimento de sistemas, segurança cibernética, redes de computadores e automação.</p>
+              <ul id="contact-services">
+                <li>Desenvolvimento de projetos</li>
+                <li>Segurança &amp; redes</li>
+                <li>Automação</li>
+              </ul>
+            </div>
+            <div class="social-panel hover-rise">
+              <h3 id="social-title">Minhas redes</h3>
+              <div id="social-links" class="social-links"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-main">
+        <div class="footer-identity">
+          <strong id="footer-name">Jéssica Montes Santos</strong>
+          <span id="footer-tagline">Desenvolvimento de Sistemas · Redes · Cibersegurança</span>
+        </div>
+        <nav id="footer-links" class="footer-links" aria-label="Redes sociais"></nav>
+        <a id="footer-back" class="footer-back" href="#inicio">Voltar ao início <span aria-hidden="true">↑</span></a>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> <span id="footer-copyright">Jéssica</span></span>
+        <span id="footer-credit">Desenvolvido por Jéssica Montes Santos.</span>
+      </div>
+    </div>
+  </footer>
+
+  <dialog id="skill-dialog" class="skill-dialog" aria-labelledby="skill-modal-title" aria-describedby="skill-modal-description">
+    <button type="button" id="skill-modal-close" class="modal-close" aria-label="Fechar detalhes">×</button>
+    <div class="skill-modal-heading">
+      <span class="skill-modal-icon"><img id="skill-modal-icon" src="assets/icons/code.svg" alt="" aria-hidden="true"></span>
+      <div>
+        <span id="skill-modal-status" class="skill-modal-status"></span>
+        <h2 id="skill-modal-title"></h2>
+      </div>
+    </div>
+    <p id="skill-modal-description" class="skill-modal-description"></p>
+    <ul id="skill-modal-details" class="skill-modal-details"></ul>
+  </dialog>
+
+  <dialog id="project-dialog" class="project-dialog" aria-labelledby="modal-title">
+    <button type="button" id="modal-close" class="modal-close" aria-label="Fechar detalhes">×</button>
+    <img id="modal-cover" src="assets/project-cover-cafeteria.png" alt="" width="720" height="420">
+    <div class="modal-content">
+      <h2 id="modal-title"></h2>
+      <p id="modal-description"></p>
+      <div id="modal-tags" class="project-tags"></div>
+      <div class="modal-actions">
+        <a id="modal-homepage" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer" hidden>Visitar projeto</a>
+        <a id="modal-link" class="btn btn-outline" href="https://github.com/miwnyan" target="_blank" rel="noopener noreferrer">Ver no GitHub</a>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

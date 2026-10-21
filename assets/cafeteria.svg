@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-label="Arte abstrata do projeto SistemaCafeteria">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#322334"/><stop offset=".5" stop-color="#5a3656"/><stop offset="1" stop-color="#281b2e"/></linearGradient>
+<linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe8ef"/><stop offset="1" stop-color="#f4a8c7"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#e98eaf" stop-opacity=".52"/><stop offset="1" stop-color="#e98eaf" stop-opacity="0"/></radialGradient>
+<pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#ffe0ee" stroke-opacity=".055"/></pattern>
+</defs>
+<rect width="720" height="420" fill="url(#bg)"/><circle cx="545" cy="190" r="230" fill="url(#glow)"/><rect width="720" height="420" fill="url(#grid)"/>
+<g fill="#e7a4c4" opacity=".5"><circle cx="100" cy="65" r="3"/><circle cx="186" cy="127" r="2"/><circle cx="600" cy="78" r="3"/><circle cx="657" cy="262" r="2"/><path d="M604 114v14m-7-7h14" stroke="#e7a4c4" stroke-width="2"/></g>
+<rect x="185" y="122" width="360" height="249" rx="18" fill="#231b26" stroke="#dc9fbb" stroke-opacity=".36" stroke-width="3"/>
+<rect x="198" y="135" width="334" height="222" rx="10" fill="#493344"/>
+<path d="M190 151h351l-24 76H214Z" fill="#e6acc6"/><path d="M215 150h53l-11 73h-48zm105 0h52v73h-64zm104 0h51l14 73h-64z" fill="#a66a8c"/>
+<path d="M211 222q25 25 50 0 25 25 51 0 25 25 52 0 25 25 52 0 25 25 51 0 25 25 51 0" fill="none" stroke="#ffdce9" stroke-width="9" stroke-linecap="round"/>
+<rect x="252" y="245" width="126" height="112" rx="6" fill="#201923"/><rect x="409" y="248" width="80" height="75" rx="4" fill="#201923"/><path d="M262 273h106M262 292h106" stroke="#ffcbdc" stroke-width="2" opacity=".2"/>
+<g transform="translate(284 244)"><path d="M24 55h48l-7 44H32Z" fill="url(#shine)"/><path d="M71 64q32-3 23 17-6 14-23 12" fill="none" stroke="#ffdbe7" stroke-width="7"/><path d="M36 36q-11-10 0-22m20 22q-11-10 0-22" fill="none" stroke="#ffcedf" stroke-width="5" stroke-linecap="round"/></g>
+<path d="M0 378q97-33 205 0 89-25 166 0 128-32 235 0 49-8 114 0v42H0Z" fill="#241b29"/>
+<g fill="#e7b0ca" opacity=".94"><circle cx="81" cy="377" r="22"/><circle cx="114" cy="384" r="18"/><circle cx="626" cy="370" r="24"/><circle cx="656" cy="387" r="20"/></g><g fill="#fff0f5"><circle cx="81" cy="377" r="6"/><circle cx="114" cy="384" r="5"/><circle cx="626" cy="370" r="6"/><circle cx="656" cy="387" r="5"/></g>
+</svg>
