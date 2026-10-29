@@ -23,6 +23,7 @@ O conteúdo editável é persistido no Cloud Firestore, o login usa Firebase Aut
 | Firebase Authentication | login por e-mail e senha em `/admin` |
 | Cloud Firestore Standard | conteúdo público e lista de administradores |
 | Cloudinary | capas, GIFs, favicon, coelhinho e ícones personalizados |
+| Namecheap Private Email | recebimento das mensagens do formulário por SMTP |
 | Vercel ou Firebase Hosting | hospedagem dos arquivos gerados em `dist/` |
 
 Todo o conteúdo público fica em um único documento, `portfolio/public`. Essa escolha reduz cada carregamento do portfólio a uma leitura, mantém uma publicação atômica e aproveita melhor a franquia gratuita. As imagens não são gravadas no documento: o Firestore armazena apenas suas URLs e metadados.
@@ -126,11 +127,22 @@ VITE_FIREBASE_APP_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
 VITE_MAX_UPLOAD_MB=10
+SMTP_HOST=mail.privateemail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=contato@jessicamontes.space
+SMTP_PASSWORD=
+CONTACT_EMAIL=contato@jessicamontes.space
+SMTP_FROM_NAME=Portfólio da Jéssica
 DISCORD_WEBHOOK_URL=
 DISCORD_CONTACT_USER_ID=1215077795651133479
 ```
 
-Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro as variáveis `VITE_CLOUDINARY_*` compiladas e, se necessário, consulta `/api/public-config` em runtime; os aliases `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_UPLOAD_PRESET` também são aceitos. Esses dois identificadores são públicos. `DISCORD_WEBHOOK_URL` é privada, só pode ser lida pela função `/api/contact` e deve ser configurada diretamente na Vercel. O webhook publica no canal associado e menciona `DISCORD_CONTACT_USER_ID`; webhooks do Discord não iniciam mensagens diretas.
+Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro as variáveis `VITE_CLOUDINARY_*` compiladas e, se necessário, consulta `/api/public-config` em runtime; os aliases `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_UPLOAD_PRESET` também são aceitos. Esses dois identificadores são públicos.
+
+O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` é a senha da caixa postal `contato@jessicamontes.space`, não a senha da conta Namecheap. Todas as variáveis `SMTP_*` são privadas, ficam somente no servidor e nunca devem receber o prefixo `VITE_`. O remetente autenticado permanece `SMTP_USER`; o e-mail informado pelo visitante é aplicado em `Reply-To`, permitindo responder diretamente.
+
+`DISCORD_WEBHOOK_URL` também é privada e funciona como notificação adicional opcional. Se o SMTP estiver configurado, o formulário só confirma o envio depois que o servidor da Namecheap aceitar a mensagem; uma falha isolada do Discord não impede o recebimento por e-mail.
 
 ## 4. Publicar na Vercel
 
@@ -143,7 +155,7 @@ Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel ten
 
 O [vercel.json](vercel.json) preserva a rota limpa `/admin` e adiciona cabeçalhos básicos de segurança. Cada alteração de uma variável `VITE_*` exige um novo deploy, pois o valor é incorporado no build.
 
-O formulário de contato depende da função serverless `/api/contact` e, portanto, precisa da publicação pela Vercel (ou de uma função equivalente em outro provedor). O valor de `DISCORD_WEBHOOK_URL` permanece somente no ambiente do servidor.
+O formulário de contato depende da função serverless `/api/contact` e, portanto, precisa da publicação pela Vercel (ou de uma função equivalente em outro provedor). Cadastre `SMTP_PASSWORD` como valor sensível e faça um novo deploy sempre que adicionar ou alterar qualquer variável. O envio SMTP é aguardado pela função antes da resposta de sucesso.
 
 ## 5. Publicar no Firebase Hosting
 

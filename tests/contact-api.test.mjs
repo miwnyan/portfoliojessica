@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+for (const name of ['SMTP_USER', 'SMTP_PASSWORD', 'CONTACT_EMAIL']) delete process.env[name];
 process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/123/token-for-test';
 process.env.DISCORD_CONTACT_USER_ID = '1215077795651133479';
 
@@ -10,7 +11,39 @@ globalThis.fetch = async (url, options) => {
   return { ok: true, status: 200 };
 };
 
-const { default: handler } = await import('../api/contact.js');
+const { default: handler, getSmtpConfig, sendContactEmail } = await import('../api/contact.js');
+
+const smtpConfig = getSmtpConfig({
+  SMTP_HOST: 'mail.privateemail.com',
+  SMTP_PORT: '465',
+  SMTP_SECURE: 'true',
+  SMTP_USER: 'contato@jessicamontes.space',
+  SMTP_PASSWORD: 'test-only-password',
+  CONTACT_EMAIL: 'contato@jessicamontes.space'
+});
+assert.equal(smtpConfig.host, 'mail.privateemail.com');
+assert.equal(smtpConfig.port, 465);
+assert.equal(smtpConfig.secure, true);
+assert.equal(getSmtpConfig({ SMTP_USER: 'contato@jessicamontes.space' }), null);
+
+let transportOptions;
+let emailPayload;
+await sendContactEmail({
+  name: 'Visitante',
+  email: 'visitante@example.com',
+  message: 'Olá, gostaria de conversar sobre um projeto.'
+}, {
+  config: smtpConfig,
+  createTransport(options) {
+    transportOptions = options;
+    return { async sendMail(payload) { emailPayload = payload; } };
+  }
+});
+assert.equal(transportOptions.auth.user, 'contato@jessicamontes.space');
+assert.equal(transportOptions.auth.pass, 'test-only-password');
+assert.equal(emailPayload.to, 'contato@jessicamontes.space');
+assert.equal(emailPayload.replyTo.address, 'visitante@example.com');
+assert.match(emailPayload.subject, /Visitante/);
 
 function responseRecorder() {
   return {
