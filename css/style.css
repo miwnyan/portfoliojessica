@@ -178,7 +178,22 @@ img { max-width: 100%; }
   animation-duration: 18s;
   animation-direction: alternate-reverse;
 }
-.hero-content { max-width: 720px; position: relative; z-index: 1; }
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 700px) minmax(300px, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+.hero-copy { min-width: 0; }
+.hero-moon-root {
+  width: min(440px, 100%);
+  aspect-ratio: 1;
+  justify-self: end;
+  margin-right: -18px;
+  touch-action: pan-y;
+}
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -345,6 +360,8 @@ img { max-width: 100%; }
   position: relative;
   display: block;
   width: 100%;
+  transform-origin: 58% 76%;
+  animation: bunnyBreathe 3.8s ease-in-out infinite;
 }
 .pixel-bunny {
   width: 100%;
@@ -360,14 +377,13 @@ img { max-width: 100%; }
   border-radius: 24px;
   background: transparent;
   color: var(--accent-light);
-  transform-origin: 55% 80%;
   -webkit-tap-highlight-color: transparent;
 }
 .bunny-button:focus-visible {
   outline: 2px solid var(--accent-light);
   outline-offset: 8px;
 }
-.bunny-button.is-reacting { animation: bunnyWake 1.5s var(--ease); }
+.bunny-button.is-reacting .bunny-picture { animation: none; }
 .skills-block { margin-top: 50px; }
 .skills-heading {
   display: flex;
@@ -808,7 +824,19 @@ img { max-width: 100%; }
 .contact-form-panel textarea { min-height: 105px; resize: vertical; }
 .contact-form-panel input:focus, .contact-form-panel textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(239,173,208,.12); transform: translateY(-1px); }
 .contact-form-panel .submit-btn { width: 100%; border-radius: 7px; min-height: 40px; }
+.contact-form-panel .submit-btn:disabled { cursor: wait; opacity: .68; transform: none; }
+.contact-honeypot {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
 .contact-status { color: #e7b8cf; font-size: 12px; margin: 12px 0 0; }
+.contact-status.is-success { color: #bfe6cb; }
+.contact-status.is-error { color: #ffb7c1; }
 .contact-status:empty { display: none; }
 .contact-side { display: flex; flex-direction: column; gap: 21px; }
 .contact-info-panel { padding: 27px 28px; flex: 1; }
@@ -1027,12 +1055,9 @@ img { max-width: 100%; }
   0% { opacity: .65; transform: translateX(var(--section-shift, 30px)); }
   100% { opacity: 1; transform: translateX(0); }
 }
-@keyframes bunnyWake {
-  0% { transform: translateY(0) rotate(0); }
-  18% { transform: translateY(-8px) rotate(-3deg); }
-  34% { transform: translateY(-3px) rotate(2deg); }
-  52% { transform: translateY(-5px) rotate(-1deg); }
-  72%, 100% { transform: translateY(0) rotate(0); }
+@keyframes bunnyBreathe {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-1px) scaleY(1.025); }
 }
 
 /* Major surfaces stay connected to the colors editable in /admin. */
@@ -1135,6 +1160,8 @@ body {
 }
 @media (max-width: 900px) {
   .container { width: min(100% - 52px, 1140px); }
+  .hero-content { grid-template-columns: minmax(0, 1fr) minmax(250px, 34vw); gap: 8px; }
+  .hero-moon-root { margin-right: -12px; }
   .about-overview { gap: 30px; }
   .skills-grid { gap: 14px; }
   .contact-grid { gap: 18px; }
@@ -1153,7 +1180,10 @@ body {
   .site-nav { display: none; position: absolute; left: 0; top: 67px; right: 0; padding: 17px 20px 21px; background: #110e12; border-bottom: 1px solid #4b3244; box-shadow: 0 15px 30px #0008; flex-direction: column; align-items: stretch; gap: 0; }
   .site-nav.open { display: flex; }
   .site-nav a { padding: 10px 0; font-size: 14px; }
-  .hero { min-height: 510px; padding: 92px 0 92px; }
+  .hero { min-height: 720px; padding: 92px 0 68px; }
+  .hero-content { grid-template-columns: 1fr; gap: 20px; }
+  .hero-copy { position: relative; z-index: 2; }
+  .hero-moon-root { width: min(330px, 86vw); margin: -12px auto 0; justify-self: center; }
   .hero h1 { margin-top: 25px; letter-spacing: -1.7px; }
   .hero h2 { font-size: 22px; }
   .hero-description { font-size: 14px; margin: 22px 0 28px; }
@@ -1208,7 +1238,7 @@ body {
     -webkit-text-fill-color: currentColor;
     animation: none !important;
   }
-  .bunny-button.is-reacting { animation: none; }
+  .bunny-picture { animation: none; }
 }
 
 @media (forced-colors: active) {

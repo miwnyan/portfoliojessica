@@ -596,7 +596,7 @@ function renderContact() {
   const settingsPanel = panel('Área de contato', 'Textos do formulário e do bloco sobre o trabalho.', `
     <div class="editor-grid">
       ${inputField({ path: 'settings.contact.formTitle', label: 'Título do formulário', value: contact.formTitle })}
-      ${inputField({ path: 'settings.contact.destinationEmail', label: 'E-mail de destino', value: contact.destinationEmail, type: 'email', help: 'As mensagens serão abertas no aplicativo de e-mail do visitante.' })}
+      <div class="field field-span-2"><span class="field-label">Entrega do formulário</span><p class="field-help">As mensagens são enviadas pela função segura /api/contact. Configure DISCORD_WEBHOOK_URL na Vercel; a credencial nunca é exposta no navegador.</p></div>
       ${inputField({ path: 'settings.contact.nameLabel', label: 'Campo de nome', value: contact.nameLabel })}
       ${inputField({ path: 'settings.contact.emailLabel', label: 'Campo de e-mail', value: contact.emailLabel })}
       ${inputField({ path: 'settings.contact.messageLabel', label: 'Campo de mensagem', value: contact.messageLabel })}

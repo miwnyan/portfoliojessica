@@ -24,6 +24,19 @@ def main() -> None:
 
         page.goto(BASE_URL, wait_until="networkidle")
         page.locator("#projects-grid .circular-carousel").wait_for(state="visible")
+        page.wait_for_function("document.querySelector('#typed-name')?.textContent === 'Jéssica'")
+
+        moon = page.locator("#hero-moon-root .halftone-reveal")
+        moon.wait_for(state="visible")
+        assert moon.locator("canvas").evaluate("canvas => canvas.width > 0 && canvas.height > 0")
+        hero_box = page.locator(".hero-content").bounding_box()
+        about_box = page.locator(".about-copy").bounding_box()
+        assert hero_box and about_box
+        assert abs(hero_box["x"] - about_box["x"]) <= 1
+        moon.hover(position={"x": 280, "y": 220})
+        page.wait_for_timeout(350)
+        page.evaluate("window.scrollTo(0, 0)")
+        page.screenshot(path=str(ARTIFACTS / "hero-halftone.png"), full_page=False)
 
         assert page.locator("#projects-grid [data-cc-index]").count() == 6
         project_labels = page.locator("#projects-grid [data-cc-index]").evaluate_all(
@@ -77,14 +90,33 @@ def main() -> None:
         bunny = page.locator("#bunny-interaction")
         assert page.locator(".bunny-hint").count() == 0
         original_bunny_src = page.locator("#bunny-image").get_attribute("src")
+        assert "coelhinho-estatico.png" in original_bunny_src
+        assert page.locator(".bunny-picture").evaluate(
+            "element => getComputedStyle(element).animationName === 'bunnyBreathe'"
+        )
+        bunny.evaluate("element => element.dataset.reactionDuration = '450'")
         bunny.click()
         assert bunny.evaluate("element => element.classList.contains('is-reacting')")
-        page.wait_for_timeout(180)
-        assert page.locator("#bunny-reaction").count() == 0
-        assert page.locator("#bunny-image").get_attribute("src") == original_bunny_src
-        assert bunny.evaluate("element => getComputedStyle(element).transform !== 'none'")
+        assert "coelhinho.gif" in page.locator("#bunny-image").get_attribute("src")
+        assert page.locator(".bunny-picture").evaluate(
+            "element => getComputedStyle(element).animationName === 'none'"
+        )
+        page.wait_for_timeout(520)
+        assert not bunny.evaluate("element => element.classList.contains('is-reacting')")
+        assert "coelhinho-estatico.png" in page.locator("#bunny-image").get_attribute("src")
 
-        page.wait_for_function("document.querySelector('#typed-name')?.textContent === 'Jéssica'")
+        page.route(
+            "**/api/contact",
+            lambda route: route.fulfill(status=200, content_type="application/json", body='{"ok":true}'),
+        )
+        page.locator("#contact-name").fill("Visitante")
+        page.locator("#contact-email").fill("visitante@example.com")
+        page.locator("#contact-message").fill("Olá, gostaria de conversar sobre um projeto.")
+        page.locator("#contact-submit").click()
+        page.locator("#contact-status.is-success").wait_for(state="visible")
+        assert "Mensagem enviada" in page.locator("#contact-status").inner_text()
+        assert page.locator("#contact-message").input_value() == ""
+
         assert page.locator(".warp-name__canvas").count() == 0
         intro_box = page.locator("#typed-hero").bounding_box()
         name_box = page.locator("#typed-name").bounding_box()

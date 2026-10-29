@@ -1,4 +1,5 @@
 import { DEFAULT_PORTFOLIO, cloneDefaultPortfolio } from './default-data.js';
+import { renderHeroMoon } from './hero-moon.jsx';
 import { renderProjectsCarousel } from './projects-carousel.jsx';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -127,8 +128,12 @@ function applySettings(settings = {}) {
   }
   const bunny = byId('bunny-image');
   if (bunny) {
-    bunny.src = safeImage(about.bunnyAnimatedUrl, 'assets/coelhinho.gif');
-    bunny.alt = about.bunnyAlt || 'Coelhinho rosa em pixel art';
+    const animatedSrc = safeImage(about.bunnyAnimatedUrl, 'assets/coelhinho.gif');
+    const staticSrc = safeImage(about.bunnyStaticUrl, 'assets/coelhinho-estatico.png');
+    bunny.dataset.animatedSrc = animatedSrc;
+    bunny.dataset.staticSrc = staticSrc;
+    if (!bunny.closest('.bunny-button')?.classList.contains('is-reacting')) bunny.src = staticSrc;
+    bunny.alt = about.bunnyAlt || 'Coelhinho rosa dormindo em pixel art';
   }
   const bunnyStatic = byId('bunny-static');
   if (bunnyStatic) bunnyStatic.srcset = safeImage(about.bunnyStaticUrl, 'assets/coelhinho-estatico.png');
@@ -672,44 +677,64 @@ function initContentInteractions() {
 
 function initBunnyInteraction() {
   const button = byId('bunny-interaction');
-  if (!button) return;
+  const image = byId('bunny-image');
+  if (!button || !image) return;
   let resetTimer = 0;
   button.addEventListener('click', () => {
     window.clearTimeout(resetTimer);
-    button.classList.remove('is-reacting');
-    void button.offsetWidth;
     button.classList.add('is-reacting');
     button.setAttribute('aria-label', 'Coelhinho reagindo');
+    if (!reducedMotion) {
+      const animatedSrc = image.dataset.animatedSrc || 'assets/coelhinho.gif';
+      const animatedUrl = new URL(animatedSrc, window.location.href);
+      animatedUrl.searchParams.set('play', String(Date.now()));
+      image.src = animatedUrl.href;
+    }
     resetTimer = window.setTimeout(() => {
       button.classList.remove('is-reacting');
+      image.src = image.dataset.staticSrc || 'assets/coelhinho-estatico.png';
       button.setAttribute('aria-label', 'Interagir com o coelhinho');
-    }, reducedMotion ? 450 : 1500);
+    }, reducedMotion ? 450 : Math.max(450, Number(button.dataset.reactionDuration) || 13100));
   });
 }
 
 function initContactForm() {
   const form = byId('contact-form');
   const status = byId('contact-status');
-  form?.addEventListener('submit', event => {
+  const submit = byId('contact-submit');
+  form?.addEventListener('submit', async event => {
     event.preventDefault();
     if (!form.reportValidity()) return;
-    const settings = state.data.settings || {};
-    const destination = String(settings.contact?.destinationEmail || '').trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)) {
-      status.textContent = settings.ui?.contactMissingEmail || 'O e-mail de destino ainda não foi configurado.';
-      return;
-    }
     const name = form.elements.name.value.trim();
     const email = form.elements.email.value.trim();
     const message = form.elements.message.value.trim();
-    const subject = encodeURIComponent(`Contato pelo portfólio — ${name}`);
-    const body = encodeURIComponent(`Nome: ${name}\nE-mail: ${email}\n\n${message}`);
-    status.textContent = settings.ui?.contactOpeningEmail || 'Abrindo seu aplicativo de e-mail para concluir o envio.';
-    window.location.href = `mailto:${destination}?subject=${subject}&body=${body}`;
+    const website = form.elements.website.value.trim();
+    status.classList.remove('is-error', 'is-success');
+    status.textContent = 'Enviando mensagem…';
+    if (submit) submit.disabled = true;
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ name, email, message, website })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || 'Não foi possível enviar a mensagem.');
+      form.reset();
+      status.classList.add('is-success');
+      status.textContent = 'Mensagem enviada. Obrigada pelo contato!';
+    } catch (error) {
+      status.classList.add('is-error');
+      status.textContent = error instanceof Error ? error.message : 'Não foi possível enviar a mensagem. Tente novamente.';
+    } finally {
+      if (submit) submit.disabled = false;
+    }
   });
 }
 
 async function boot() {
+  renderHeroMoon(byId('hero-moon-root'));
   renderPortfolio(state.data, { resetFolderState: true });
   initNavigation();
   initHeroAnimation();

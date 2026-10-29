@@ -126,9 +126,11 @@ VITE_FIREBASE_APP_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
 VITE_MAX_UPLOAD_MB=10
+DISCORD_WEBHOOK_URL=
+DISCORD_CONTACT_USER_ID=1215077795651133479
 ```
 
-Depois de alterar o `.env`, reinicie o servidor de desenvolvimento ou gere um novo build. Variáveis `VITE_*` são inseridas no JavaScript durante o build; elas não são secretas.
+Depois de alterar o `.env`, reinicie o servidor de desenvolvimento ou gere um novo build. Variáveis `VITE_*` são inseridas no JavaScript durante o build; elas não são secretas. `DISCORD_WEBHOOK_URL` é privada, só pode ser lida pela função `/api/contact` e deve ser configurada diretamente na Vercel. O webhook publica no canal associado e menciona `DISCORD_CONTACT_USER_ID`; webhooks do Discord não iniciam mensagens diretas.
 
 ## 4. Publicar na Vercel
 
@@ -140,6 +142,8 @@ Depois de alterar o `.env`, reinicie o servidor de desenvolvimento ou gere um no
 6. Adicione o domínio final em **Firebase Authentication → Settings → Authorized domains**.
 
 O [vercel.json](vercel.json) preserva a rota limpa `/admin` e adiciona cabeçalhos básicos de segurança. Cada alteração de uma variável `VITE_*` exige um novo deploy, pois o valor é incorporado no build.
+
+O formulário de contato depende da função serverless `/api/contact` e, portanto, precisa da publicação pela Vercel (ou de uma função equivalente em outro provedor). O valor de `DISCORD_WEBHOOK_URL` permanece somente no ambiente do servidor.
 
 ## 5. Publicar no Firebase Hosting
 
@@ -183,6 +187,7 @@ Ao importar do GitHub, informe uma URL pública ou `usuario/repositorio`. Reposi
 Os arquivos em `assets/` continuam sendo os padrões do portfólio, inclusive:
 
 - `coelhinho.gif` e `coelhinho-estatico.png`;
+- `lua-rosa.png`, usada pelo efeito interativo de halftone no hero;
 - `project-cover-cafeteria.png` e `project-cover-sysdaisy.png`;
 - `favicon.svg`;
 - ícones locais das tecnologias.

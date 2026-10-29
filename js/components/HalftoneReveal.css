@@ -1,0 +1,20 @@
+.halftone-reveal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.halftone-reveal-fallback,
+.halftone-reveal-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.halftone-reveal-fallback {
+  object-fit: contain;
+  opacity: 0.72;
+}

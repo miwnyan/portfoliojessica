@@ -35,14 +35,17 @@
   <main id="conteudo">
     <section id="inicio" class="hero section-anchor">
       <div class="container hero-content section-shell">
-        <span id="hero-eyebrow" class="eyebrow hero-item">Portfólio pessoal</span>
-        <h1 class="hero-item hero-title" aria-label="Olá, eu sou a Jéssica"><span id="typed-hero" class="typed-hero" data-text="Olá, eu sou a "></span><span id="typed-name" class="typed-name" data-text="Jéssica" aria-hidden="true"></span></h1>
-        <h2 id="hero-subtitle" class="hero-item">Desenvolvimento de Sistemas</h2>
-        <p id="hero-description" class="hero-description hero-item">Técnica em Redes de Computadores e estudante de Análise e Desenvolvimento de Sistemas, com formação em Segurança Cibernética.</p>
-        <div class="hero-actions hero-item">
-          <a id="hero-primary" class="btn btn-primary" href="#projetos">Ver projetos</a>
-          <a id="hero-secondary" class="btn btn-outline" href="#contato">Entrar em contato</a>
+        <div class="hero-copy">
+          <span id="hero-eyebrow" class="eyebrow hero-item">Portfólio pessoal</span>
+          <h1 class="hero-item hero-title" aria-label="Olá, eu sou a Jéssica"><span id="typed-hero" class="typed-hero" data-text="Olá, eu sou a "></span><span id="typed-name" class="typed-name" data-text="Jéssica" aria-hidden="true"></span></h1>
+          <h2 id="hero-subtitle" class="hero-item">Desenvolvimento de Sistemas</h2>
+          <p id="hero-description" class="hero-description hero-item">Técnica em Redes de Computadores e estudante de Análise e Desenvolvimento de Sistemas, com formação em Segurança Cibernética.</p>
+          <div class="hero-actions hero-item">
+            <a id="hero-primary" class="btn btn-primary" href="#projetos">Ver projetos</a>
+            <a id="hero-secondary" class="btn btn-outline" href="#contato">Entrar em contato</a>
+          </div>
         </div>
+        <div id="hero-moon-root" class="hero-moon-root" role="img" aria-label="Lua rosa interativa revelada em pontos"></div>
       </div>
     </section>
 
@@ -58,10 +61,10 @@
             </div>
           </div>
           <div class="bunny-scene reveal" data-reveal="right">
-            <button id="bunny-interaction" class="bunny-button" type="button" aria-label="Interagir com o coelhinho">
+            <button id="bunny-interaction" class="bunny-button" type="button" aria-label="Interagir com o coelhinho" data-reaction-duration="13100">
               <picture class="bunny-picture">
                 <source id="bunny-static" media="(prefers-reduced-motion: reduce)" srcset="assets/coelhinho-estatico.png">
-                <img id="bunny-image" src="assets/coelhinho.gif" alt="Coelhinho rosa em pixel art" width="200" height="200" class="pixel-bunny" loading="lazy">
+                <img id="bunny-image" src="assets/coelhinho-estatico.png" alt="Coelhinho rosa dormindo em pixel art" width="200" height="200" class="pixel-bunny" loading="lazy">
               </picture>
             </button>
           </div>
@@ -100,6 +103,10 @@
           <div class="contact-form-panel reveal" data-reveal="left">
             <h3 id="contact-form-title">Envie uma mensagem</h3>
             <form id="contact-form">
+              <div class="contact-honeypot" aria-hidden="true">
+                <label for="contact-website">Não preencha este campo</label>
+                <input id="contact-website" name="website" type="text" autocomplete="off" tabindex="-1">
+              </div>
               <label id="contact-name-label" for="contact-name">Nome</label>
               <input id="contact-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" required>
               <label id="contact-email-label" for="contact-email">E-mail</label>
