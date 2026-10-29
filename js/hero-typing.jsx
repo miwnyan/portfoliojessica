@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import TextType from './components/TextType.jsx';
 
 const roots = new WeakMap();
-const PHRASE_PAUSES = Object.freeze([7000, 5000, 5000, 5000]);
+const PHRASE_PAUSES = Object.freeze([4000, 3000, 3000, 3000]);
 
 function HeroTyping({ hero }) {
   const name = String(hero?.name || 'Jéssica').trim();

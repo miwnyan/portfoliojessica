@@ -34,7 +34,7 @@ def main() -> None:
         assert "Desenvolvo sistemas" in phrases
         assert "Crio automações" in phrases
         assert "Protejo redes e dados" in phrases
-        page.wait_for_timeout(5_200)
+        page.wait_for_timeout(3_200)
         assert "Olá, eu sou a Jéssica" in page.locator(".text-type__content").inner_text()
 
         moon = page.locator("#hero-moon-root .halftone-reveal")
