@@ -101,12 +101,12 @@ No primeiro acesso autorizado, o painel pode inicializar `portfolio/public` com 
 
 O nome correto do serviço usado para mídia é **Cloudinary**.
 
-1. Crie uma conta gratuita e copie o **Cloud name** para `VITE_CLOUDINARY_CLOUD_NAME`.
+1. Crie uma conta gratuita e copie o **Cloud name** para `VITE_CLOUDINARY_CLOUD_NAME` ou `CLOUDINARY_CLOUD_NAME`.
 2. Em **Settings → Upload → Upload presets**, crie um preset.
 3. Defina o modo de assinatura como **Unsigned**.
 4. Restrinja o preset a imagens, aos formatos realmente usados (`jpg`, `jpeg`, `png`, `webp`, `gif`, `ico` e, se necessário, `svg`) e a no máximo **10 MB**.
 5. Defina uma pasta exclusiva, por exemplo `portfolio-jessica`, mantenha nomes únicos e desative sobrescrita quando essa opção estiver disponível.
-6. Copie o nome do preset para `VITE_CLOUDINARY_UPLOAD_PRESET`.
+6. Copie o nome do preset para `VITE_CLOUDINARY_UPLOAD_PRESET` ou `CLOUDINARY_UPLOAD_PRESET`.
 
 O upload sai diretamente do navegador para o Cloudinary; o arquivo não atravessa a Vercel nem o Firebase. Isso permite GIFs maiores que o limite de payload de funções serverless, mas o plano gratuito do Cloudinary atualmente limita cada imagem a **10 MB**. `VITE_MAX_UPLOAD_MB=10` aplica a mesma validação na interface.
 
@@ -130,7 +130,7 @@ DISCORD_WEBHOOK_URL=
 DISCORD_CONTACT_USER_ID=1215077795651133479
 ```
 
-Depois de alterar o `.env`, reinicie o servidor de desenvolvimento ou gere um novo build. Variáveis `VITE_*` são inseridas no JavaScript durante o build; elas não são secretas. `DISCORD_WEBHOOK_URL` é privada, só pode ser lida pela função `/api/contact` e deve ser configurada diretamente na Vercel. O webhook publica no canal associado e menciona `DISCORD_CONTACT_USER_ID`; webhooks do Discord não iniciam mensagens diretas.
+Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro as variáveis `VITE_CLOUDINARY_*` compiladas e, se necessário, consulta `/api/public-config` em runtime; os aliases `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_UPLOAD_PRESET` também são aceitos. Esses dois identificadores são públicos. `DISCORD_WEBHOOK_URL` é privada, só pode ser lida pela função `/api/contact` e deve ser configurada diretamente na Vercel. O webhook publica no canal associado e menciona `DISCORD_CONTACT_USER_ID`; webhooks do Discord não iniciam mensagens diretas.
 
 ## 4. Publicar na Vercel
 

@@ -24,7 +24,16 @@ def main() -> None:
 
         page.goto(BASE_URL, wait_until="networkidle")
         page.locator("#projects-grid .circular-carousel").wait_for(state="visible")
-        page.wait_for_function("document.querySelector('#typed-name')?.textContent === 'Jéssica'")
+        page.wait_for_function(
+            "document.querySelector('.text-type__content')?.textContent.includes('Jéssica')"
+        )
+        assert page.locator("#hero-subtitle").count() == 0
+        assert page.locator("#hero-type-root h1").count() == 1
+        assert "Jéssica" == "".join(page.locator(".text-type__char--accent").all_inner_texts())
+        phrases = page.locator("#hero-type-root .text-type__sr").inner_text()
+        assert "Desenvolvo sistemas" in phrases
+        assert "Crio automações" in phrases
+        assert "Protejo redes e dados" in phrases
 
         moon = page.locator("#hero-moon-root .halftone-reveal")
         moon.wait_for(state="visible")
@@ -116,12 +125,12 @@ def main() -> None:
         page.locator("#contact-status.is-success").wait_for(state="visible")
         assert "Mensagem enviada" in page.locator("#contact-status").inner_text()
         assert page.locator("#contact-message").input_value() == ""
+        assert page.locator("#contact-message").evaluate("element => getComputedStyle(element).resize === 'none'")
 
-        assert page.locator(".warp-name__canvas").count() == 0
-        intro_box = page.locator("#typed-hero").bounding_box()
-        name_box = page.locator("#typed-name").bounding_box()
-        assert intro_box and name_box
-        assert abs(intro_box["y"] - name_box["y"]) <= 1
+        hero_title_box = page.locator("#hero-type-root h1").bounding_box()
+        hero_description_box = page.locator("#hero-description").bounding_box()
+        assert hero_title_box and hero_description_box
+        assert abs(hero_title_box["x"] - hero_description_box["x"]) <= 1
 
         for section in ["#sobre", "#skills-grid", "#experience-timeline", "#projetos", "#contato"]:
             page.locator(section).scroll_into_view_if_needed()

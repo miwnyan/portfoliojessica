@@ -1,7 +1,7 @@
 import { cpSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -27,11 +27,41 @@ function copyStableAssets() {
   };
 }
 
-/** Keep the requested clean /admin URL working in Vite dev and preview. */
-function adminCleanUrl() {
+/** Keep local app routes working in Vite dev and preview. */
+function localAppRoutes(mode) {
+  const environment = loadEnv(mode, rootDirectory, '');
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+    || process.env.VITE_CLOUDINARY_CLOUD_NAME
+    || environment.CLOUDINARY_CLOUD_NAME
+    || environment.VITE_CLOUDINARY_CLOUD_NAME
+    || '';
+  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET
+    || process.env.VITE_CLOUDINARY_UPLOAD_PRESET
+    || environment.CLOUDINARY_UPLOAD_PRESET
+    || environment.VITE_CLOUDINARY_UPLOAD_PRESET
+    || '';
   const rewriteAdmin = middlewares => {
-    middlewares.use((request, _response, next) => {
+    middlewares.use((request, response, next) => {
       const [pathname, query = ''] = String(request.url || '').split('?');
+      if (pathname === '/api/public-config') {
+        if (request.method !== 'GET') {
+          response.statusCode = 405;
+          response.setHeader('Allow', 'GET');
+          response.end(JSON.stringify({ error: 'Método não permitido.' }));
+          return;
+        }
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Cache-Control', 'no-store');
+        response.end(JSON.stringify({
+          cloudinary: {
+            configured: Boolean(cloudName && uploadPreset),
+            cloudName,
+            uploadPreset
+          }
+        }));
+        return;
+      }
       if (pathname === '/admin') {
         request.url = `/admin/${query ? `?${query}` : ''}`;
       }
@@ -40,7 +70,7 @@ function adminCleanUrl() {
   };
 
   return {
-    name: 'admin-clean-url',
+    name: 'local-app-routes',
     configureServer(server) {
       rewriteAdmin(server.middlewares);
     },
@@ -50,10 +80,10 @@ function adminCleanUrl() {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   appType: 'mpa',
   base: '/',
-  plugins: [adminCleanUrl(), copyStableAssets()],
+  plugins: [localAppRoutes(mode), copyStableAssets()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -65,4 +95,4 @@ export default defineConfig({
       }
     }
   }
-});
+}));

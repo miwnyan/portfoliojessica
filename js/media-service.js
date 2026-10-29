@@ -25,8 +25,9 @@ const ALLOWED_EXTENSIONS = new Set([
   'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'ico'
 ]);
 
-const cloudName = String(env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
-const uploadPreset = String(env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
+const buildCloudName = String(env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
+const buildUploadPreset = String(env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
+let runtimeConfigPromise;
 
 export class MediaUploadError extends Error {
   constructor(message, code = 'media/upload-failed', details = null) {
@@ -118,25 +119,50 @@ function cloudinaryError(response, status) {
   );
 }
 
+const validCloudinaryConfig = config => /^[a-zA-Z0-9_-]+$/.test(config.cloudName)
+  && /^[a-zA-Z0-9_-]+$/.test(config.uploadPreset);
+
+async function resolveCloudinaryConfig() {
+  const buildConfig = { cloudName: buildCloudName, uploadPreset: buildUploadPreset };
+  if (validCloudinaryConfig(buildConfig)) return buildConfig;
+
+  runtimeConfigPromise ??= fetch('/api/public-config', {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+    credentials: 'same-origin'
+  }).then(async response => {
+    if (!response.ok) return buildConfig;
+    const payload = await response.json().catch(() => ({}));
+    return {
+      cloudName: String(payload.cloudinary?.cloudName || '').trim(),
+      uploadPreset: String(payload.cloudinary?.uploadPreset || '').trim()
+    };
+  }).catch(() => buildConfig);
+
+  return runtimeConfigPromise;
+}
+
 /**
  * Upload unsigned e direto para o Cloudinary. Nenhum segredo ou API key é
  * enviado pelo navegador; o preset deve restringir pasta, formatos e tamanho.
  */
-export function uploadMedia(file, rawOptions = {}) {
+export async function uploadMedia(file, rawOptions = {}) {
   const options = normalizeOptions(rawOptions);
   const validation = validateMediaFile(file);
 
   if (!validation.valid) {
-    return Promise.reject(new MediaUploadError(validation.error, validation.code, validation));
+    throw new MediaUploadError(validation.error, validation.code, validation);
   }
-  if (!/^[a-zA-Z0-9_-]+$/.test(cloudName) || !uploadPreset) {
-    return Promise.reject(new MediaUploadError(
-      'Configure VITE_CLOUDINARY_CLOUD_NAME e VITE_CLOUDINARY_UPLOAD_PRESET.',
+  const { cloudName, uploadPreset } = await resolveCloudinaryConfig();
+  if (!validCloudinaryConfig({ cloudName, uploadPreset })) {
+    throw new MediaUploadError(
+      'O upload de imagens está indisponível. Confirme o Cloud name e o preset unsigned no ambiente da publicação.',
       'media/not-configured'
-    ));
+    );
   }
   if (options.signal?.aborted) {
-    return Promise.reject(new MediaUploadError('Envio cancelado.', 'media/aborted'));
+    throw new MediaUploadError('Envio cancelado.', 'media/aborted');
   }
 
   return new Promise((resolve, reject) => {

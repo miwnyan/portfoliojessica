@@ -1,5 +1,6 @@
 import { DEFAULT_PORTFOLIO, cloneDefaultPortfolio } from './default-data.js';
 import { renderHeroMoon } from './hero-moon.jsx';
+import { renderHeroTyping } from './hero-typing.jsx';
 import { renderProjectsCarousel } from './projects-carousel.jsx';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -8,8 +9,7 @@ const state = {
   expandedExperiences: false,
   openFolders: new Set(),
   expandedFolders: new Set(),
-  activeSkillTrigger: null,
-  typingStarted: false
+  activeSkillTrigger: null
 };
 
 const byId = id => document.getElementById(id);
@@ -100,22 +100,10 @@ function applySettings(settings = {}) {
   textIn('[data-nav="contact"]', navigation.contact || 'Contato');
 
   text('hero-eyebrow', hero.eyebrow);
-  text('hero-subtitle', hero.subtitle);
   text('hero-description', hero.description);
   text('hero-primary', hero.primaryLabel);
   text('hero-secondary', hero.secondaryLabel);
-  const typedIntro = byId('typed-hero');
-  const typedName = byId('typed-name');
-  if (typedIntro) typedIntro.dataset.text = hero.intro || '';
-  if (typedName) typedName.dataset.text = hero.name || '';
-  document.querySelector('.hero-title')?.setAttribute('aria-label', `${hero.intro || ''}${hero.name || ''}`.trim());
-  if (state.typingStarted) {
-    if (typedIntro) typedIntro.textContent = hero.intro || '';
-    if (typedName) {
-      typedName.textContent = hero.name || '';
-      typedName.classList.add('typing-complete');
-    }
-  }
+  renderHeroTyping(byId('hero-type-root'), hero);
 
   text('about-title', about.title);
   const aboutParagraphs = byId('about-paragraphs');
@@ -514,38 +502,6 @@ function refreshRevealElements() {
   elements.forEach(element => revealObserver.observe(element));
 }
 
-function typeHeroText() {
-  if (state.typingStarted) return;
-  state.typingStarted = true;
-  const introElement = byId('typed-hero');
-  const nameElement = byId('typed-name');
-  if (!introElement || !nameElement) return;
-  const intro = introElement.dataset.text || '';
-  const name = nameElement.dataset.text || '';
-  if (reducedMotion) {
-    introElement.textContent = intro;
-    nameElement.textContent = name;
-    nameElement.classList.add('typing-complete');
-    return;
-  }
-  let index = 0;
-  introElement.textContent = '';
-  nameElement.textContent = '';
-  const tick = () => {
-    introElement.textContent = intro.slice(0, index);
-    index += 1;
-    if (index <= intro.length) {
-      window.setTimeout(tick, 60);
-      return;
-    }
-    window.setTimeout(() => {
-      nameElement.textContent = name;
-      nameElement.classList.add('typing-complete');
-    }, 110);
-  };
-  window.setTimeout(tick, 280);
-}
-
 function initNavigation() {
   const header = document.querySelector('.site-header');
   const menuToggle = byId('menu-toggle');
@@ -748,7 +704,6 @@ async function boot() {
   } catch (error) {
     console.warn('Portfólio: usando o conteúdo local porque os dados remotos não puderam ser carregados.', error);
   }
-  typeHeroText();
 }
 
 boot();

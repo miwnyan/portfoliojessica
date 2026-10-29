@@ -27,7 +27,13 @@ function isAllowedOrigin(request) {
 }
 
 function getWebhookUrl() {
-  const raw = String(process.env.DISCORD_WEBHOOK_URL || '').trim();
+  const raw = String(
+    process.env.DISCORD_WEBHOOK_URL
+    || process.env.PORTFOLIO_DISCORD_WEBHOOK_URL
+    || process.env.DISCORD_WEBHOOK
+    || process.env.VITE_DISCORD_WEBHOOK_URL
+    || ''
+  ).trim();
   if (!raw) return null;
   try {
     const url = new URL(raw);
@@ -87,7 +93,7 @@ export default async function handler(request, response) {
 
   const webhookUrl = getWebhookUrl();
   if (!webhookUrl) {
-    reply(response, 503, { ok: false, error: 'O canal de contato ainda não foi configurado.' });
+    reply(response, 503, { ok: false, error: 'O envio está temporariamente indisponível. Tente novamente mais tarde.' });
     return;
   }
 

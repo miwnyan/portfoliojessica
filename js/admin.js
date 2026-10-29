@@ -420,7 +420,6 @@ function renderPageSettings() {
   const hero = panel('Apresentação', 'Primeiro conteúdo visto ao abrir o portfólio.', `
     <div class="editor-grid">
       ${inputField({ path: 'settings.hero.eyebrow', label: 'Selo superior', value: settings.hero.eyebrow })}
-      ${inputField({ path: 'settings.hero.subtitle', label: 'Área profissional', value: settings.hero.subtitle })}
       ${inputField({ path: 'settings.hero.intro', label: 'Início do título', value: settings.hero.intro })}
       ${inputField({ path: 'settings.hero.name', label: 'Nome em destaque', value: settings.hero.name })}
       ${textareaField({ path: 'settings.hero.description', label: 'Descrição', value: settings.hero.description, span: 'field-span-2', maxlength: 500 })}
@@ -474,8 +473,6 @@ function renderPageSettings() {
       ${inputField({ path: 'settings.ui.projectHomepageTitle', label: 'Título do link publicado', value: ui.projectHomepageTitle || 'Abrir projeto publicado' })}
       ${inputField({ path: 'settings.ui.skillDialogCloseLabel', label: 'Fechar habilidade', value: ui.skillDialogCloseLabel })}
       ${inputField({ path: 'settings.ui.projectDialogCloseLabel', label: 'Fechar projeto', value: ui.projectDialogCloseLabel })}
-      ${textareaField({ path: 'settings.ui.contactMissingEmail', label: 'Aviso de e-mail ausente', value: ui.contactMissingEmail, span: 'field-span-2', rows: 2 })}
-      ${textareaField({ path: 'settings.ui.contactOpeningEmail', label: 'Aviso ao abrir o e-mail', value: ui.contactOpeningEmail, span: 'field-span-2', rows: 2 })}
     </div>`);
 
   return `${pageHeading('Textos da página', 'Altere a comunicação do portfólio sem modificar sua estrutura visual.')}<div class="editor-stack">${navigation}${hero}${about}${sections}${footer}${interfaceTexts}</div>`;
@@ -596,7 +593,7 @@ function renderContact() {
   const settingsPanel = panel('Área de contato', 'Textos do formulário e do bloco sobre o trabalho.', `
     <div class="editor-grid">
       ${inputField({ path: 'settings.contact.formTitle', label: 'Título do formulário', value: contact.formTitle })}
-      <div class="field field-span-2"><span class="field-label">Entrega do formulário</span><p class="field-help">As mensagens são enviadas pela função segura /api/contact. Configure DISCORD_WEBHOOK_URL na Vercel; a credencial nunca é exposta no navegador.</p></div>
+      <div class="field field-span-2"><span class="field-label">Entrega do formulário</span><p class="field-help">As mensagens são entregues pelo webhook privado da publicação sem expor a credencial no navegador.</p></div>
       ${inputField({ path: 'settings.contact.nameLabel', label: 'Campo de nome', value: contact.nameLabel })}
       ${inputField({ path: 'settings.contact.emailLabel', label: 'Campo de e-mail', value: contact.emailLabel })}
       ${inputField({ path: 'settings.contact.messageLabel', label: 'Campo de mensagem', value: contact.messageLabel })}
