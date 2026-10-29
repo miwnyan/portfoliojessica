@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import TextType from './components/TextType.jsx';
 
 const roots = new WeakMap();
+const PHRASE_PAUSES = Object.freeze([7000, 5000, 5000, 5000]);
 
 function HeroTyping({ hero }) {
   const name = String(hero?.name || 'Jéssica').trim();
@@ -24,7 +25,7 @@ function HeroTyping({ hero }) {
       highlightWords={[name]}
       variableSpeed={{ min: 48, max: 82 }}
       initialDelay={260}
-      pauseDuration={1900}
+      pauseDuration={PHRASE_PAUSES}
       deletingSpeed={28}
       deleteMode="backspace"
       typeEffect="fade"

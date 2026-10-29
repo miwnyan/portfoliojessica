@@ -34,6 +34,8 @@ def main() -> None:
         assert "Desenvolvo sistemas" in phrases
         assert "Crio automações" in phrases
         assert "Protejo redes e dados" in phrases
+        page.wait_for_timeout(5_200)
+        assert "Olá, eu sou a Jéssica" in page.locator(".text-type__content").inner_text()
 
         moon = page.locator("#hero-moon-root .halftone-reveal")
         moon.wait_for(state="visible")
@@ -53,6 +55,11 @@ def main() -> None:
         )
         assert any("SistemaCafeteria" in label for label in project_labels)
         assert any("SysDaisyOptimizer" in label for label in project_labels)
+        project_images = page.locator("#projects-grid .circular-carousel__photo").evaluate_all(
+            "images => images.map(image => new URL(image.currentSrc || image.src).pathname)"
+        )
+        for preview in ["prumo-preview.png", "lastro-preview.png", "cirro-preview.png", "nexo-preview.png"]:
+            assert any(path.endswith(preview) for path in project_images)
         assert page.locator("#skills-grid .skill-folder").count() == 3
         assert page.locator("#skills-grid [data-skill-id]").count() == 18
         assert page.locator("#experience-timeline .timeline-item").count() == 2
@@ -87,13 +94,29 @@ def main() -> None:
         page.screenshot(path=str(ARTIFACTS / "project-hover.png"), full_page=False)
 
         first_folder = page.locator("#skills-grid [data-folder-toggle]").first
+        second_folder = page.locator("#skills-grid [data-folder-toggle]").nth(1)
+        page.locator("#skills-grid [data-skill-id]").first.hover()
+        assert page.locator("#skills-grid .folder-paper").first.evaluate(
+            "element => getComputedStyle(element, '::before').content === 'none'"
+        )
         first_folder.click()
         assert page.locator("#skills-grid .skill-folder").first.evaluate("element => element.classList.contains('is-closing')")
+        second_folder.click()
+        assert not page.locator("#skills-grid .skill-folder").nth(1).evaluate(
+            "element => element.classList.contains('is-closing')"
+        )
         page.wait_for_timeout(220)
         page.screenshot(path=str(ARTIFACTS / "folder-closing.png"), full_page=False)
-        page.wait_for_timeout(480)
+        page.wait_for_timeout(460)
         assert first_folder.get_attribute("aria-expanded") == "false"
+        page.wait_for_timeout(40)
+        assert page.locator("#skills-grid .skill-folder").nth(1).evaluate(
+            "element => element.classList.contains('is-closing')"
+        )
+        page.wait_for_timeout(620)
+        assert second_folder.get_attribute("aria-expanded") == "false"
         first_folder.click()
+        page.wait_for_timeout(650)
         assert first_folder.get_attribute("aria-expanded") == "true"
 
         bunny = page.locator("#bunny-interaction")

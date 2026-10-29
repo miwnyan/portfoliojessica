@@ -118,6 +118,11 @@ const TextType = ({
   const maxSpeed = variableSpeed?.max ?? typingSpeed;
   const pace = (minSpeed + maxSpeed) / 2;
   const glideTime = Math.min(0.18, Math.max(0.06, pace * 0.0016));
+  const sentencePauseDuration = Math.max(0, Number(
+    Array.isArray(pauseDuration)
+      ? (pauseDuration[index] ?? pauseDuration.at(-1))
+      : pauseDuration
+  ) || 0);
 
   useEffect(() => {
     onSentenceCompleteRef.current = onSentenceComplete;
@@ -239,7 +244,7 @@ const TextType = ({
           wait(lead + speed(), () => setCount(shown + 1));
         }
       } else if (loop || index < textArray.length - 1) {
-        wait(pauseDuration, () => setIsDeleting(true));
+        wait(sentencePauseDuration, () => setIsDeleting(true));
       }
     } else if (shown > 0) {
       if (deleteMode === 'select') {
@@ -264,7 +269,7 @@ const TextType = ({
     return () => clearTimeout(timeout);
   }, [
     isVisible, isDeleting, shown, total, chars, selected, typo, index, textArray, loop, deletingSpeed,
-    deleteMode, pauseDuration, initialDelay, minSpeed, maxSpeed, mistakes, reverseMode, reduceMotion
+    deleteMode, sentencePauseDuration, initialDelay, minSpeed, maxSpeed, mistakes, reverseMode, reduceMotion
   ]);
 
   const animateChar = useCallback(node => {

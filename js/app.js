@@ -4,12 +4,15 @@ import { renderHeroTyping } from './hero-typing.jsx';
 import { renderProjectsCarousel } from './projects-carousel.jsx';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FOLDER_TRANSITION_MS = 620;
 const state = {
   data: cloneDefaultPortfolio(),
   expandedExperiences: false,
   openFolders: new Set(),
   expandedFolders: new Set(),
-  activeSkillTrigger: null
+  activeSkillTrigger: null,
+  folderTransitioning: false,
+  folderToggleQueue: []
 };
 
 const byId = id => document.getElementById(id);
@@ -301,6 +304,55 @@ function renderFolders() {
   grid.replaceChildren(...nodes);
 }
 
+function finishFolderTransition(focusId) {
+  state.folderTransitioning = false;
+  if (focusId) {
+    document.querySelector(`[data-folder-toggle="${CSS.escape(focusId)}"]`)?.focus();
+  }
+  const nextId = state.folderToggleQueue.shift();
+  if (nextId) window.requestAnimationFrame(() => toggleFolder(nextId));
+}
+
+function toggleFolder(id) {
+  if (!id) return;
+  if (state.folderTransitioning) {
+    if (!state.folderToggleQueue.includes(id)) state.folderToggleQueue.push(id);
+    return;
+  }
+
+  state.folderTransitioning = true;
+  if (!state.openFolders.has(id)) {
+    state.openFolders.add(id);
+    renderFolders();
+    const finish = () => finishFolderTransition(id);
+    if (reducedMotion) finish();
+    else window.setTimeout(finish, FOLDER_TRANSITION_MS);
+    return;
+  }
+
+  const folderButton = document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`);
+  const folder = folderButton?.closest('.skill-folder');
+  const paper = folder?.querySelector('.folder-paper');
+  if (!folderButton || !folder) {
+    state.openFolders.delete(id);
+    renderFolders();
+    finishFolderTransition(id);
+    return;
+  }
+
+  folderButton.disabled = true;
+  folderButton.setAttribute('aria-expanded', 'false');
+  paper?.setAttribute('aria-hidden', 'true');
+  if (paper) paper.inert = true;
+  folder.classList.add('is-closing');
+
+  window.setTimeout(() => {
+    state.openFolders.delete(id);
+    renderFolders();
+    finishFolderTransition(id);
+  }, reducedMotion ? 0 : FOLDER_TRANSITION_MS);
+}
+
 function renderExperiences() {
   const timeline = byId('experience-timeline');
   const toggle = byId('experience-toggle');
@@ -585,25 +637,7 @@ function initContentInteractions() {
     }
     const folderButton = event.target.closest('[data-folder-toggle]');
     if (folderButton) {
-      const id = folderButton.dataset.folderToggle;
-      if (state.openFolders.has(id)) {
-        const folder = folderButton.closest('.skill-folder');
-        const paper = folder?.querySelector('.folder-paper');
-        folderButton.disabled = true;
-        folderButton.setAttribute('aria-expanded', 'false');
-        paper?.setAttribute('aria-hidden', 'true');
-        if (paper) paper.inert = true;
-        folder?.classList.add('is-closing');
-        window.setTimeout(() => {
-          state.openFolders.delete(id);
-          renderFolders();
-          document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`)?.focus();
-        }, reducedMotion ? 0 : 620);
-      } else {
-        state.openFolders.add(id);
-        renderFolders();
-        document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`)?.focus();
-      }
+      toggleFolder(folderButton.dataset.folderToggle);
     }
   });
   byId('projects-grid')?.addEventListener('click', event => {

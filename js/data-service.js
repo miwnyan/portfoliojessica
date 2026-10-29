@@ -21,6 +21,21 @@ const SAFE_ID = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 const SAFE_COLOR = /^#[0-9a-f]{6}$/i;
 const SAFE_RADIUS = /^\d+(?:\.\d+)?(?:px|rem|em|%)$/i;
 
+const PROJECT_PREVIEWS = Object.freeze([
+  { tokens: ['prumo', 'prumo-tarefas'], src: '/assets/projects/prumo-preview.png' },
+  { tokens: ['lastro', 'lastro-financas'], src: '/assets/projects/lastro-preview.png' },
+  { tokens: ['cirro', 'cirro-clima'], src: '/assets/projects/cirro-preview.png' },
+  { tokens: ['nexo', 'nexo-conversor'], src: '/assets/projects/nexo-preview.png' }
+]);
+
+function pinnedProjectPreview({ id, name, repositoryUrl, githubRepo }) {
+  const identity = [id, name, repositoryUrl, githubRepo]
+    .map(value => String(value || '').trim().toLowerCase())
+    .filter(Boolean)
+    .join(' ');
+  return PROJECT_PREVIEWS.find(preview => preview.tokens.some(token => identity.includes(token)))?.src || '';
+}
+
 const SETTINGS_TEXT_LIMITS = Object.freeze({
   meta: {
     title: 100,
@@ -280,20 +295,25 @@ function normalizeProjects(value) {
   return normalizeEntities(source, DEFAULT_PORTFOLIO.projects, 'project', (raw, fallback, id, index) => {
     const githubInput = isPlainObject(raw.github) ? raw.github : {};
     const githubFallback = isPlainObject(fallback.github) ? fallback.github : {};
+    const name = cleanTrimmedText(raw.name ?? raw.nome, fallback.name || 'Projeto sem título', 160);
+    const repositoryUrl = cleanUrl(raw.repositoryUrl ?? raw.repositorio, fallback.repositoryUrl || '', { allowLocal: false });
+    const githubRepo = cleanTrimmedText(githubInput.repo, githubFallback.repo || '', 120);
+    const coverUrl = pinnedProjectPreview({ id, name, repositoryUrl, githubRepo })
+      || cleanUrl(raw.coverUrl ?? raw.capa, fallback.coverUrl || '');
     return {
       ...entityBasics(raw, fallback, id, index),
-      name: cleanTrimmedText(raw.name ?? raw.nome, fallback.name || 'Projeto sem título', 160),
+      name,
       summary: cleanText(raw.summary ?? raw.resumo, fallback.summary || '', 800).trim(),
       description: cleanText(raw.description ?? raw.descricao, fallback.description || '', 10_000).trim(),
       technologies: cleanStringList(raw.technologies ?? raw.tecnologias, fallback.technologies || [], 30, 80),
-      coverUrl: cleanUrl(raw.coverUrl ?? raw.capa, fallback.coverUrl || ''),
+      coverUrl,
       coverPublicId: cleanTrimmedText(raw.coverPublicId, fallback.coverPublicId || '', 255),
-      repositoryUrl: cleanUrl(raw.repositoryUrl ?? raw.repositorio, fallback.repositoryUrl || '', { allowLocal: false }),
+      repositoryUrl,
       homepageUrl: cleanUrl(raw.homepageUrl, fallback.homepageUrl || '', { allowLocal: false }),
       source: ['github', 'manual'].includes(raw.source) ? raw.source : (fallback.source || 'manual'),
       github: {
         owner: cleanTrimmedText(githubInput.owner, githubFallback.owner || '', 80),
-        repo: cleanTrimmedText(githubInput.repo, githubFallback.repo || '', 120),
+        repo: githubRepo,
         fullName: cleanTrimmedText(githubInput.fullName, githubFallback.fullName || '', 220),
         defaultBranch: cleanTrimmedText(githubInput.defaultBranch, githubFallback.defaultBranch || '', 220),
         language: cleanTrimmedText(githubInput.language, githubFallback.language || '', 100),

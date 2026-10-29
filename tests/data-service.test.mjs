@@ -35,4 +35,20 @@ const migratedFromFourProjects = normalizePortfolio({
 });
 assert.deepEqual(migratedFromFourProjects.projects.map(project => project.id), ['lastro', 'nexo', 'cirro', 'prumo', 'cafeteria', 'sysdaisy']);
 
+const pinnedPreviews = normalizePortfolio({
+  projects: [
+    { id: 'prumo', name: 'Prumo', coverUrl: 'https://opengraph.githubassets.com/prumo' },
+    { id: 'lastro', name: 'Lastro', coverUrl: 'https://opengraph.githubassets.com/lastro' },
+    { id: 'cirro', name: 'Cirro', coverUrl: 'https://opengraph.githubassets.com/cirro' },
+    { id: 'nexo', name: 'Nexo', coverUrl: 'https://opengraph.githubassets.com/nexo' },
+    { id: 'cafeteria', name: 'SistemaCafeteria' },
+    { id: 'sysdaisy', name: 'SysDaisyOptimizer' }
+  ]
+});
+const pinnedPreviewById = new Map(pinnedPreviews.projects.map(project => [project.id, project.coverUrl]));
+assert.equal(pinnedPreviewById.get('prumo'), '/assets/projects/prumo-preview.png');
+assert.equal(pinnedPreviewById.get('lastro'), '/assets/projects/lastro-preview.png');
+assert.equal(pinnedPreviewById.get('cirro'), '/assets/projects/cirro-preview.png');
+assert.equal(pinnedPreviewById.get('nexo'), '/assets/projects/nexo-preview.png');
+
 console.log('Data service tests passed');
