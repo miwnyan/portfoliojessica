@@ -23,4 +23,10 @@ assert.equal(normalized.contacts[0].iconUrl, 'https://example.com/icon.svg');
 assert.ok(normalized.settings.ui.projectHomepageLabel);
 assert.ok(normalized.settings.ui.projectHomepageTitle);
 
+const migrated = normalizePortfolio({
+  schemaVersion: 1,
+  projects: [{ id: 'cafeteria', name: 'SistemaCafeteria' }, { id: 'sysdaisy', name: 'SysDaisyOptimizer' }]
+});
+assert.deepEqual(migrated.projects.map(project => project.id), ['lastro', 'nexo', 'cirro', 'prumo']);
+
 console.log('Data service tests passed');

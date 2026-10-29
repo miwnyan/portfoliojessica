@@ -59,10 +59,13 @@
             </div>
           </div>
           <div class="bunny-scene reveal" data-reveal="right">
-            <picture class="bunny-picture">
-              <source id="bunny-static" media="(prefers-reduced-motion: reduce)" srcset="assets/coelhinho-estatico.png">
-              <img id="bunny-image" src="assets/coelhinho.gif" alt="Coelhinho rosa em pixel art" width="200" height="200" class="pixel-bunny" loading="lazy">
-            </picture>
+            <button id="bunny-interaction" class="bunny-button" type="button" aria-label="Acordar o coelhinho">
+              <picture class="bunny-picture">
+                <source id="bunny-static" media="(prefers-reduced-motion: reduce)" srcset="assets/coelhinho-estatico.png">
+                <img id="bunny-image" src="assets/coelhinho.gif" alt="Coelhinho rosa em pixel art" width="200" height="200" class="pixel-bunny" loading="lazy">
+              </picture>
+              <span class="bunny-hint" aria-hidden="true">Clique para acordar</span>
+            </button>
           </div>
         </div>
 
@@ -88,7 +91,7 @@
           <h2 id="projects-title" class="section-title">Meus Projetos</h2>
           <p id="projects-intro">Projetos publicados no GitHub.</p>
         </div>
-        <div id="projects-grid" class="projects-grid" aria-live="polite"></div>
+        <div id="projects-grid" class="projects-carousel-root"></div>
       </div>
     </section>
 
@@ -155,13 +158,14 @@
         <h2 id="skill-modal-title"></h2>
       </div>
     </div>
+    <img id="skill-modal-certificate" class="skill-modal-certificate" src="assets/certificates/azure-fundamentals.png" alt="" hidden>
     <p id="skill-modal-description" class="skill-modal-description"></p>
     <ul id="skill-modal-details" class="skill-modal-details"></ul>
   </dialog>
 
   <dialog id="project-dialog" class="project-dialog" aria-labelledby="modal-title">
     <button type="button" id="modal-close" class="modal-close" aria-label="Fechar detalhes">×</button>
-    <img id="modal-cover" src="assets/project-cover-cafeteria.png" alt="" width="720" height="420">
+    <img id="modal-cover" src="assets/projects/lastro-preview.png" alt="" width="1280" height="720">
     <div class="modal-content">
       <h2 id="modal-title"></h2>
       <p id="modal-description"></p>

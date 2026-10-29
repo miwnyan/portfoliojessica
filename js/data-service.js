@@ -226,7 +226,6 @@ function normalizeSettings(value) {
     incomingAbout.bunnyStaticUrl,
     DEFAULT_PORTFOLIO.settings.about.bunnyStaticUrl
   );
-
   Object.keys(DEFAULT_PORTFOLIO.settings.theme).forEach(key => {
     const fallback = DEFAULT_PORTFOLIO.settings.theme[key];
     const candidate = cleanTrimmedText(incomingTheme[key], fallback, 32);
@@ -272,7 +271,12 @@ const entityBasics = (raw, fallback, id, index) => ({
 });
 
 function normalizeProjects(value) {
-  return normalizeEntities(value, DEFAULT_PORTFOLIO.projects, 'project', (raw, fallback, id, index) => {
+  const legacyProjectIds = new Set(['cafeteria', 'sysdaisy']);
+  const isLegacyPortfolio = Array.isArray(value)
+    && value.length > 0
+    && value.every(project => legacyProjectIds.has(String(project?.id || '').toLowerCase()));
+  const source = isLegacyPortfolio ? undefined : value;
+  return normalizeEntities(source, DEFAULT_PORTFOLIO.projects, 'project', (raw, fallback, id, index) => {
     const githubInput = isPlainObject(raw.github) ? raw.github : {};
     const githubFallback = isPlainObject(fallback.github) ? fallback.github : {};
     return {
@@ -337,6 +341,7 @@ function normalizeSkills(value, folderIds) {
       status: cleanTrimmedText(raw.status, fallback.status || '', 180),
       iconId: cleanTrimmedText(raw.iconId, fallback.iconId || 'code', 80),
       iconUrl: cleanUrl(raw.iconUrl, fallback.iconUrl || '/assets/icons/code.svg'),
+      certificateUrl: cleanUrl(raw.certificateUrl, fallback.certificateUrl || ''),
       description: cleanText(raw.description, fallback.description || '', 5000).trim(),
       details: cleanStringList(raw.details, fallback.details || [], 20, 500)
     };

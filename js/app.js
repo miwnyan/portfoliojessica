@@ -1,4 +1,5 @@
 import { DEFAULT_PORTFOLIO, cloneDefaultPortfolio } from './default-data.js';
+import { renderProjectsCarousel } from './projects-carousel.jsx';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const state = {
@@ -358,71 +359,8 @@ function renderProjects() {
   const grid = byId('projects-grid');
   if (!grid) return;
   const projects = visibleOrdered(state.data.projects);
-  const ui = state.data.settings?.ui || {};
-  const nodes = projects.map((project, index) => {
-    const projectName = project.name || project.nome || '';
-    const article = document.createElement('article');
-    article.className = 'project-card reveal hover-rise';
-    article.dataset.reveal = index % 2 === 0 ? 'left' : 'right';
-    article.style.setProperty('--delay', `${0.08 * index}s`);
-    const cover = document.createElement('div');
-    cover.className = 'project-image';
-    const image = document.createElement('img');
-    image.src = safeImage(project.coverUrl || project.cover || project.capa, 'assets/project-cover-cafeteria.png');
-    image.alt = project.coverAlt || `Capa do projeto ${projectName}`;
-    image.loading = 'lazy';
-    image.width = 1280;
-    image.height = 720;
-    cover.appendChild(image);
-    const body = document.createElement('div');
-    body.className = 'project-body';
-    const name = document.createElement('h3');
-    name.textContent = projectName;
-    const summary = document.createElement('p');
-    summary.textContent = project.summary || project.resumo || '';
-    const tags = document.createElement('div');
-    tags.className = 'project-tags';
-    addTags(tags, project.technologies || project.tecnologias);
-    const actions = document.createElement('div');
-    actions.className = 'project-actions';
-    const details = document.createElement('button');
-    details.type = 'button';
-    details.className = 'btn btn-primary btn-small';
-    details.dataset.projectId = project.id;
-    details.textContent = ui.projectDetailsLabel || 'Ver detalhes';
-    details.setAttribute('aria-label', `${details.textContent}: ${projectName}`);
-    actions.appendChild(details);
-    const repository = safeHref(project.repositoryUrl || project.repository || project.repositorio, '');
-    if (repository) {
-      const code = document.createElement('a');
-      code.className = 'icon-btn';
-      code.href = repository;
-      code.target = '_blank';
-      code.rel = 'noopener noreferrer';
-      code.title = ui.projectRepositoryTitle || 'Abrir repositório';
-      code.setAttribute('aria-label', `${code.title}: ${projectName}`);
-      code.innerHTML = SOCIAL_ICONS.github;
-      actions.appendChild(code);
-    }
-    const homepage = safeHref(project.homepageUrl, '');
-    if (homepage) {
-      const website = document.createElement('a');
-      website.className = 'icon-btn';
-      website.href = homepage;
-      website.target = '_blank';
-      website.rel = 'noopener noreferrer';
-      website.title = ui.projectHomepageTitle || 'Abrir projeto publicado';
-      website.setAttribute('aria-label', `${website.title}: ${projectName}`);
-      website.innerHTML = SOCIAL_ICONS.website;
-      actions.appendChild(website);
-    }
-    body.append(name, summary, tags, actions);
-    article.append(cover, body);
-    return article;
-  });
-  grid.replaceChildren(...nodes);
+  renderProjectsCarousel(grid, projects, openProject);
 }
-
 function renderContacts() {
   const socialContainer = byId('social-links');
   const footerContainer = byId('footer-links');
@@ -495,7 +433,7 @@ function openProject(projectId) {
   text('modal-description', project.description || project.descricao);
   const image = byId('modal-cover');
   if (image) {
-    image.src = safeImage(project.coverUrl || project.cover || project.capa, 'assets/project-cover-cafeteria.png');
+    image.src = safeImage(project.coverUrl || project.cover || project.capa, 'assets/projects/lastro-preview.png');
     image.alt = project.coverAlt || `Capa do projeto ${projectName}`;
   }
   addTags(byId('modal-tags'), project.technologies || project.tecnologias);
@@ -529,6 +467,13 @@ function openSkill(skillId, trigger) {
   if (icon) icon.src = safeImage(skill.iconUrl, 'assets/icons/code.svg');
   text('skill-modal-title', skill.title || skill.name);
   text('skill-modal-status', skill.status);
+  const certificate = byId('skill-modal-certificate');
+  if (certificate) {
+    const certificateUrl = safeImage(skill.certificateUrl, '');
+    certificate.hidden = !certificateUrl;
+    certificate.src = certificateUrl || 'assets/certificates/azure-fundamentals.png';
+    certificate.alt = certificateUrl ? `Certificado: ${skill.title || skill.name}` : '';
+  }
   text('skill-modal-description', skill.description);
   const list = byId('skill-modal-details');
   if (list) {
@@ -683,10 +628,24 @@ function initContentInteractions() {
     const folderButton = event.target.closest('[data-folder-toggle]');
     if (folderButton) {
       const id = folderButton.dataset.folderToggle;
-      if (state.openFolders.has(id)) state.openFolders.delete(id);
-      else state.openFolders.add(id);
-      renderFolders();
-      document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`)?.focus();
+      if (state.openFolders.has(id)) {
+        const folder = folderButton.closest('.skill-folder');
+        const paper = folder?.querySelector('.folder-paper');
+        folderButton.disabled = true;
+        folderButton.setAttribute('aria-expanded', 'false');
+        paper?.setAttribute('aria-hidden', 'true');
+        if (paper) paper.inert = true;
+        folder?.classList.add('is-closing');
+        window.setTimeout(() => {
+          state.openFolders.delete(id);
+          renderFolders();
+          document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`)?.focus();
+        }, reducedMotion ? 0 : 620);
+      } else {
+        state.openFolders.add(id);
+        renderFolders();
+        document.querySelector(`[data-folder-toggle="${CSS.escape(id)}"]`)?.focus();
+      }
     }
   });
   byId('projects-grid')?.addEventListener('click', event => {
@@ -711,6 +670,23 @@ function initContentInteractions() {
     const trigger = state.activeSkillTrigger;
     state.activeSkillTrigger = null;
     if (trigger?.isConnected) trigger.focus();
+  });
+}
+
+function initBunnyInteraction() {
+  const button = byId('bunny-interaction');
+  if (!button) return;
+  let resetTimer = 0;
+  button.addEventListener('click', () => {
+    window.clearTimeout(resetTimer);
+    button.classList.remove('is-reacting');
+    void button.offsetWidth;
+    button.classList.add('is-reacting');
+    button.setAttribute('aria-label', 'Coelhinho acordado');
+    resetTimer = window.setTimeout(() => {
+      button.classList.remove('is-reacting');
+      button.setAttribute('aria-label', 'Acordar o coelhinho');
+    }, reducedMotion ? 450 : 1500);
   });
 }
 
@@ -741,6 +717,7 @@ async function boot() {
   initNavigation();
   initHeroAnimation();
   initContentInteractions();
+  initBunnyInteraction();
   initContactForm();
   try {
     const { loadPortfolio } = await import('./data-service.js');

@@ -125,7 +125,7 @@ export const ICON_CATALOG = deepFreeze([
 ]);
 
 export const DEFAULT_PORTFOLIO = deepFreeze({
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     meta: {
       title: 'Jéssica | Portfólio',
@@ -226,36 +226,64 @@ export const DEFAULT_PORTFOLIO = deepFreeze({
   },
   projects: [
     {
-      id: 'cafeteria',
+      id: 'lastro',
       order: 0,
       visible: true,
-      name: 'SistemaCafeteria',
-      summary: 'Sistema de gerenciamento de cafeteria com cadastro de produtos, controle de estoque, vendas e relatórios.',
-      description: 'Projeto de estudo desenvolvido em Python com banco de dados SQLite. Permite cadastrar e listar produtos, atualizar o estoque, registrar vendas com cupom fiscal, salvar comprovantes e consultar relatórios de vendas.',
-      technologies: ['Python', 'SQLite', 'Gestão de estoque'],
-      coverUrl: '/assets/project-cover-cafeteria.png',
-      repositoryUrl: 'https://github.com/miwnyan/SistemaCafeteria',
+      name: 'Lastro',
+      summary: 'Controle financeiro pessoal local com lançamentos, resumo e exportação CSV.',
+      description: 'Aplicação para registrar entradas e saídas, acompanhar saldo, receitas, despesas e participação por categoria. Inclui filtros mensais, edição de lançamentos e exportação CSV, com valores armazenados em centavos para evitar erros de ponto flutuante.',
+      technologies: ['JavaScript', 'LocalStorage', 'CSV'],
+      coverUrl: '/assets/projects/lastro-preview.png',
+      coverAlt: 'Preview do painel financeiro Lastro',
+      repositoryUrl: 'https://github.com/miwnyan/lastro-financas',
+      homepageUrl: 'https://lastrofinancas.vercel.app',
       source: 'github',
-      github: {
-        owner: 'miwnyan',
-        repo: 'SistemaCafeteria'
-      }
+      github: { owner: 'miwnyan', repo: 'lastro-financas' }
     },
     {
-      id: 'sysdaisy',
+      id: 'nexo',
       order: 1,
       visible: true,
-      name: 'SysDaisyOptimizer',
-      summary: 'Aplicativo de otimização para Windows com rotinas de limpeza, ajustes de desempenho e recursos de manutenção.',
-      description: 'Otimizador para Windows desenvolvido com PowerShell e WinForms. Reúne perfis de desempenho, limpeza de arquivos temporários, manutenção do sistema e recursos de backup e registro de operações.',
-      technologies: ['PowerShell', 'WinForms', 'Windows'],
-      coverUrl: '/assets/project-cover-sysdaisy.png',
-      repositoryUrl: 'https://github.com/miwnyan/SysDaisyOptimizer',
+      name: 'Nexo',
+      summary: 'Conversor de moedas e unidades com histórico local e cotações de referência.',
+      description: 'Conversor de moedas, comprimento, massa e temperatura. As conversões de unidades funcionam offline; o câmbio consulta a API Frankfurter, informa a data da taxa e mantém um histórico local das últimas conversões.',
+      technologies: ['JavaScript', 'API REST', 'LocalStorage'],
+      coverUrl: '/assets/projects/nexo-preview.png',
+      coverAlt: 'Preview do conversor Nexo',
+      repositoryUrl: 'https://github.com/miwnyan/nexo-conversor',
+      homepageUrl: 'https://nexoconversor-pi.vercel.app',
       source: 'github',
-      github: {
-        owner: 'miwnyan',
-        repo: 'SysDaisyOptimizer'
-      }
+      github: { owner: 'miwnyan', repo: 'nexo-conversor' }
+    },
+    {
+      id: 'cirro',
+      order: 2,
+      visible: true,
+      name: 'Cirro',
+      summary: 'Observatório meteorológico com condições atuais e previsão para seis dias.',
+      description: 'Boletim meteorológico com busca de cidades, geolocalização opcional, condições atuais e previsão de seis dias. Integra Open-Meteo, trata consultas concorrentes com AbortController e adapta os objetos 3D à condição do tempo.',
+      technologies: ['JavaScript', 'Open-Meteo', 'Geolocation'],
+      coverUrl: '/assets/projects/cirro-preview.png',
+      coverAlt: 'Preview do observatório meteorológico Cirro',
+      repositoryUrl: 'https://github.com/miwnyan/cirro-clima',
+      homepageUrl: 'https://cirroclima.vercel.app',
+      source: 'github',
+      github: { owner: 'miwnyan', repo: 'cirro-clima' }
+    },
+    {
+      id: 'prumo',
+      order: 3,
+      visible: true,
+      name: 'Prumo',
+      summary: 'Gerenciador de tarefas local com prioridades, filtros, pesquisa e progresso.',
+      description: 'Gerenciador de tarefas acessível para criar, editar, concluir e excluir itens. Oferece prioridades, notas, datas-limite, filtros, pesquisa, ordenação, atalhos de teclado e persistência local no navegador.',
+      technologies: ['JavaScript', 'Acessibilidade', 'LocalStorage'],
+      coverUrl: '/assets/projects/prumo-preview.png',
+      coverAlt: 'Preview do gerenciador de tarefas Prumo',
+      repositoryUrl: 'https://github.com/miwnyan/prumo-tarefas',
+      homepageUrl: 'https://prumo-tarefas-wine.vercel.app',
+      source: 'github',
+      github: { owner: 'miwnyan', repo: 'prumo-tarefas' }
     }
   ],
   experiences: [
@@ -393,24 +421,28 @@ export const DEFAULT_PORTFOLIO = deepFreeze({
     {
       id: 'azure', folderId: 'cloud-security', order: 1, visible: true,
       name: 'Microsoft Azure', title: 'Microsoft Azure Fundamentals', badge: '', status: 'Certificação internacional · AZ-900', iconId: 'azure', iconUrl: '/assets/icons/azure.svg',
+      certificateUrl: '/assets/certificates/azure-fundamentals.png',
       description: 'Certificação Microsoft sobre conceitos de nuvem e os principais serviços da plataforma Azure.',
       details: ['Emissora: Microsoft.', 'Conceitos e modelos de computação em nuvem.', 'Serviços do Azure, segurança, governança e custos.']
     },
     {
       id: 'microsoft-security', folderId: 'cloud-security', order: 2, visible: true,
       name: 'Microsoft Security', title: 'Microsoft Security, Compliance, and Identity Fundamentals', badge: '', status: 'Certificação internacional · SC-900', iconId: 'microsoft', iconUrl: '/assets/icons/microsoft.svg',
+      certificateUrl: '/assets/certificates/security-compliance-identity.png',
       description: 'Certificação Microsoft sobre fundamentos de segurança, conformidade e identidade.',
       details: ['Emissora: Microsoft.', 'Conceitos de identidade e acesso.', 'Soluções Microsoft de segurança, conformidade e proteção.']
     },
     {
       id: 'networks', folderId: 'cloud-security', order: 3, visible: true,
       name: 'Redes', title: 'Redes de Computadores', badge: '', status: 'Formação técnica', iconId: 'network', iconUrl: '/assets/icons/network.svg',
+      certificateUrl: '/assets/certificates/redes-computadores.png',
       description: 'Base técnica para configurar, manter e diagnosticar a comunicação entre dispositivos e serviços.',
       details: ['Formação técnica pela Firjan SENAI Maracanã.', 'Fundamentos de infraestrutura e protocolos.', 'Diagnóstico e resolução de problemas de conectividade.']
     },
     {
       id: 'cybersecurity', folderId: 'cloud-security', order: 4, visible: true,
       name: 'Cibersegurança', title: 'Cibersegurança', badge: '', status: 'Formação complementar', iconId: 'security', iconUrl: '/assets/icons/security.svg',
+      certificateUrl: '/assets/certificates/seguranca-cibernetica.png',
       description: 'Conhecimentos voltados à proteção de sistemas, redes e informações contra riscos digitais.',
       details: ['Preparação técnica para a WorldSkills.', 'Análise de ameaças e vulnerabilidades.', 'Práticas defensivas e resolução de incidentes.']
     },
