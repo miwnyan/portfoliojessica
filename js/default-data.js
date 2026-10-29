@@ -125,7 +125,7 @@ export const ICON_CATALOG = deepFreeze([
 ]);
 
 export const DEFAULT_PORTFOLIO = deepFreeze({
-  schemaVersion: 2,
+  schemaVersion: 3,
   settings: {
     meta: {
       title: 'Jéssica | Portfólio',
@@ -284,6 +284,34 @@ export const DEFAULT_PORTFOLIO = deepFreeze({
       homepageUrl: 'https://prumo-tarefas-wine.vercel.app',
       source: 'github',
       github: { owner: 'miwnyan', repo: 'prumo-tarefas' }
+    },
+    {
+      id: 'cafeteria',
+      order: 4,
+      visible: true,
+      name: 'SistemaCafeteria',
+      summary: 'Sistema de gerenciamento de cafeteria com estoque, vendas e relatórios.',
+      description: 'Projeto desenvolvido em Python com banco de dados SQLite. Permite cadastrar produtos, atualizar o estoque, registrar vendas com cupom fiscal, salvar comprovantes e consultar relatórios.',
+      technologies: ['Python', 'SQLite', 'Gestão de estoque'],
+      coverUrl: '/assets/project-cover-cafeteria.png',
+      coverAlt: 'Preview do sistema de gerenciamento de cafeteria',
+      repositoryUrl: 'https://github.com/miwnyan/SistemaCafeteria',
+      source: 'github',
+      github: { owner: 'miwnyan', repo: 'SistemaCafeteria' }
+    },
+    {
+      id: 'sysdaisy',
+      order: 5,
+      visible: true,
+      name: 'SysDaisyOptimizer',
+      summary: 'Aplicativo de otimização e manutenção para ambientes Windows.',
+      description: 'Otimizador para Windows desenvolvido com PowerShell e WinForms. Reúne perfis de desempenho, limpeza de arquivos temporários, manutenção do sistema, backup e registro de operações.',
+      technologies: ['PowerShell', 'WinForms', 'Windows'],
+      coverUrl: '/assets/project-cover-sysdaisy.png',
+      coverAlt: 'Preview do aplicativo SysDaisyOptimizer',
+      repositoryUrl: 'https://github.com/miwnyan/SysDaisyOptimizer',
+      source: 'github',
+      github: { owner: 'miwnyan', repo: 'SysDaisyOptimizer' }
     }
   ],
   experiences: [

@@ -112,7 +112,7 @@ function applySettings(settings = {}) {
     if (typedIntro) typedIntro.textContent = hero.intro || '';
     if (typedName) {
       typedName.textContent = hero.name || '';
-      typedName.__warpTextInstance?.update({ text: hero.name || '' });
+      typedName.classList.add('typing-complete');
     }
   }
 
@@ -520,6 +520,7 @@ function typeHeroText() {
   if (reducedMotion) {
     introElement.textContent = intro;
     nameElement.textContent = name;
+    nameElement.classList.add('typing-complete');
     return;
   }
   let index = 0;
@@ -534,11 +535,7 @@ function typeHeroText() {
     }
     window.setTimeout(() => {
       nameElement.textContent = name;
-      window.createWarpText?.(nameElement, {
-        warpStrength: 0.04, warpScale: 1.45, speed: 0.32, pointerInfluence: 0.5,
-        pointerStrength: 0.24, refraction: 0.01, chromatic: 0.14, idleDrift: 0.08,
-        ripple: true, clickRipple: true, introDuration: 1200
-      });
+      nameElement.classList.add('typing-complete');
     }, 110);
   };
   window.setTimeout(tick, 280);
@@ -682,10 +679,10 @@ function initBunnyInteraction() {
     button.classList.remove('is-reacting');
     void button.offsetWidth;
     button.classList.add('is-reacting');
-    button.setAttribute('aria-label', 'Coelhinho acordado');
+    button.setAttribute('aria-label', 'Coelhinho reagindo');
     resetTimer = window.setTimeout(() => {
       button.classList.remove('is-reacting');
-      button.setAttribute('aria-label', 'Acordar o coelhinho');
+      button.setAttribute('aria-label', 'Interagir com o coelhinho');
     }, reducedMotion ? 450 : 1500);
   });
 }

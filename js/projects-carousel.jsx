@@ -5,12 +5,6 @@ import CircularCarousel from './components/CircularCarousel.jsx';
 
 const roots = new WeakMap();
 
-const ArrowIcon = () => (
-  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-);
-
 function ProjectCarousel({ projects, onOpenProject }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const items = useMemo(() => projects.map(project => ({
@@ -18,6 +12,8 @@ function ProjectCarousel({ projects, onOpenProject }) {
     alt: project.coverAlt || `Preview do projeto ${project.name}`,
     title: project.name,
     subtitle: project.technologies?.slice(0, 2).join(' · ') || 'Projeto',
+    actionHref: project.homepageUrl || project.repositoryUrl || project.repository || project.repositorio,
+    actionLabel: 'Abrir projeto',
     project
   })), [projects]);
 
@@ -30,9 +26,6 @@ function ProjectCarousel({ projects, onOpenProject }) {
   }
 
   const activeProject = projects[activeIndex] || projects[0];
-  const repository = activeProject.repositoryUrl || activeProject.repository || activeProject.repositorio;
-  const homepage = activeProject.homepageUrl;
-
   return (
     <div className="projects-carousel">
       <div className="projects-carousel__stage">
@@ -69,21 +62,6 @@ function ProjectCarousel({ projects, onOpenProject }) {
         <p>{activeProject.summary}</p>
         <div className="project-tags" aria-label="Tecnologias">
           {(activeProject.technologies || []).map(technology => <span key={technology}>{technology}</span>)}
-        </div>
-        <div className="projects-carousel__actions">
-          <button type="button" className="btn btn-primary btn-small" onClick={() => onOpenProject(activeProject.id)}>
-            Ver detalhes
-          </button>
-          {homepage ? (
-            <a className="projects-carousel__link" href={homepage} target="_blank" rel="noopener noreferrer">
-              Abrir projeto <ArrowIcon />
-            </a>
-          ) : null}
-          {repository ? (
-            <a className="projects-carousel__link projects-carousel__link--muted" href={repository} target="_blank" rel="noopener noreferrer">
-              GitHub <ArrowIcon />
-            </a>
-          ) : null}
         </div>
       </div>
 

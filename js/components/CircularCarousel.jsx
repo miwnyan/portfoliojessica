@@ -933,6 +933,23 @@ const CircularCarousel = ({
                 >
                   {tiles.map(tile => renderTile(item, tile, false, index))}
                   {layout.backfaces && tiles.map(tile => renderTile(item, tile, true, index))}
+                  {item.actionHref && (
+                    <div
+                      className="circular-carousel__action-layer"
+                      style={{ left: -cardW / 2, top: -cardH / 2, width: cardW, height: cardH }}
+                    >
+                      <a
+                        className="circular-carousel__action"
+                        href={item.actionHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        tabIndex={index === active ? 0 : -1}
+                        onClick={event => event.stopPropagation()}
+                      >
+                        {item.actionLabel || 'Open'}
+                      </a>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

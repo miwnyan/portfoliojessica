@@ -22,10 +22,15 @@ def main() -> None:
             else None,
         )
 
-        page.goto(BASE_URL, wait_until="domcontentloaded")
+        page.goto(BASE_URL, wait_until="networkidle")
         page.locator("#projects-grid .circular-carousel").wait_for(state="visible")
 
-        assert page.locator("#projects-grid [data-cc-index]").count() == 4
+        assert page.locator("#projects-grid [data-cc-index]").count() == 6
+        project_labels = page.locator("#projects-grid [data-cc-index]").evaluate_all(
+            "elements => elements.map(element => element.getAttribute('aria-label'))"
+        )
+        assert any("SistemaCafeteria" in label for label in project_labels)
+        assert any("SysDaisyOptimizer" in label for label in project_labels)
         assert page.locator("#skills-grid .skill-folder").count() == 3
         assert page.locator("#skills-grid [data-skill-id]").count() == 18
         assert page.locator("#experience-timeline .timeline-item").count() == 2
@@ -40,10 +45,24 @@ def main() -> None:
         page.screenshot(path=str(ARTIFACTS / "certificate-modal.png"), full_page=False)
         page.locator("#skill-modal-close").click()
 
-        page.locator("#projects-grid .projects-carousel__actions button").click()
+        page.locator("#projects-grid .circular-carousel").focus()
+        page.keyboard.press("Enter")
         page.locator("#project-dialog[open]").wait_for(state="visible")
         assert page.locator("#modal-title").inner_text().strip()
         page.locator("#modal-close").click()
+
+        carousel = page.locator("#projects-grid .circular-carousel")
+        carousel.hover()
+        page.wait_for_timeout(300)
+        active_project_index = int(page.locator(".projects-carousel__counter span").first.inner_text()) - 1
+        first_project = page.locator(f'#projects-grid [data-cc-index="{active_project_index}"]')
+        first_project.locator(".circular-carousel__tile").first.hover(force=True)
+        page.wait_for_timeout(220)
+        assert first_project.locator(".circular-carousel__action").evaluate(
+            "element => getComputedStyle(element.parentElement).opacity === '1'"
+        )
+        assert first_project.locator(".circular-carousel__action").get_attribute("href")
+        page.screenshot(path=str(ARTIFACTS / "project-hover.png"), full_page=False)
 
         first_folder = page.locator("#skills-grid [data-folder-toggle]").first
         first_folder.click()
@@ -56,6 +75,7 @@ def main() -> None:
         assert first_folder.get_attribute("aria-expanded") == "true"
 
         bunny = page.locator("#bunny-interaction")
+        assert page.locator(".bunny-hint").count() == 0
         original_bunny_src = page.locator("#bunny-image").get_attribute("src")
         bunny.click()
         assert bunny.evaluate("element => element.classList.contains('is-reacting')")
@@ -64,6 +84,13 @@ def main() -> None:
         assert page.locator("#bunny-image").get_attribute("src") == original_bunny_src
         assert bunny.evaluate("element => getComputedStyle(element).transform !== 'none'")
 
+        page.wait_for_function("document.querySelector('#typed-name')?.textContent === 'Jéssica'")
+        assert page.locator(".warp-name__canvas").count() == 0
+        intro_box = page.locator("#typed-hero").bounding_box()
+        name_box = page.locator("#typed-name").bounding_box()
+        assert intro_box and name_box
+        assert abs(intro_box["y"] - name_box["y"]) <= 1
+
         for section in ["#sobre", "#skills-grid", "#experience-timeline", "#projetos", "#contato"]:
             page.locator(section).scroll_into_view_if_needed()
             page.wait_for_timeout(80)
@@ -71,7 +98,7 @@ def main() -> None:
         page.screenshot(path=str(ARTIFACTS / "portfolio-desktop.png"), full_page=True)
 
         mobile = browser.new_page(viewport={"width": 390, "height": 844})
-        mobile.goto(BASE_URL, wait_until="domcontentloaded")
+        mobile.goto(BASE_URL, wait_until="networkidle")
         mobile.locator("#projects-grid .circular-carousel").wait_for(state="visible")
         mobile.locator("#menu-toggle").click()
         assert mobile.locator("#site-nav").evaluate("element => element.classList.contains('open')")
@@ -89,7 +116,7 @@ def main() -> None:
             if message.type == "error"
             else None,
         )
-        admin.goto(f"{BASE_URL}/admin", wait_until="domcontentloaded")
+        admin.goto(f"{BASE_URL}/admin", wait_until="networkidle")
         admin.locator("#login-view:not([hidden]), #setup-view:not([hidden]), #admin-app:not([hidden])").first.wait_for(
             state="visible", timeout=15_000
         )

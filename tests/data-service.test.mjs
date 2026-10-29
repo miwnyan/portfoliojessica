@@ -27,6 +27,12 @@ const migrated = normalizePortfolio({
   schemaVersion: 1,
   projects: [{ id: 'cafeteria', name: 'SistemaCafeteria' }, { id: 'sysdaisy', name: 'SysDaisyOptimizer' }]
 });
-assert.deepEqual(migrated.projects.map(project => project.id), ['lastro', 'nexo', 'cirro', 'prumo']);
+assert.deepEqual(migrated.projects.map(project => project.id), ['lastro', 'nexo', 'cirro', 'prumo', 'cafeteria', 'sysdaisy']);
+
+const migratedFromFourProjects = normalizePortfolio({
+  schemaVersion: 2,
+  projects: ['lastro', 'nexo', 'cirro', 'prumo'].map(id => ({ id, name: id }))
+});
+assert.deepEqual(migratedFromFourProjects.projects.map(project => project.id), ['lastro', 'nexo', 'cirro', 'prumo', 'cafeteria', 'sysdaisy']);
 
 console.log('Data service tests passed');

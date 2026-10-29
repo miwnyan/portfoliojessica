@@ -66,6 +66,52 @@
   transform-style: preserve-3d;
 }
 
+.circular-carousel__action-layer {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cc-radius);
+  background: rgba(9, 8, 10, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateZ(3px);
+  transition: opacity 180ms ease;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.circular-carousel__card:hover .circular-carousel__action-layer,
+.circular-carousel__card:focus-within .circular-carousel__action-layer {
+  opacity: 1;
+}
+
+.circular-carousel__action {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 17px;
+  border: 1px solid rgba(249, 206, 225, 0.82);
+  border-radius: 999px;
+  background: rgba(16, 14, 18, 0.92);
+  color: #f9cee1;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+  pointer-events: auto;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.circular-carousel__action:hover,
+.circular-carousel__action:focus-visible {
+  color: #09080a;
+  background: #f9cee1;
+  transform: translateY(-2px);
+  outline: none;
+}
+
 .circular-carousel__camera {
   position: relative;
 }
@@ -237,5 +283,9 @@
   .circular-carousel__title {
     animation: none;
   }
+}
+
+@media (hover: none) {
+  .circular-carousel__card:focus-within .circular-carousel__action-layer { opacity: 1; }
 }
 

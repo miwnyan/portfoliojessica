@@ -271,11 +271,12 @@ const entityBasics = (raw, fallback, id, index) => ({
 });
 
 function normalizeProjects(value) {
-  const legacyProjectIds = new Set(['cafeteria', 'sysdaisy']);
-  const isLegacyPortfolio = Array.isArray(value)
+  const previousDefaultIds = new Set(['cafeteria', 'sysdaisy', 'lastro', 'nexo', 'cirro', 'prumo']);
+  const isPreviousDefaultPortfolio = Array.isArray(value)
     && value.length > 0
-    && value.every(project => legacyProjectIds.has(String(project?.id || '').toLowerCase()));
-  const source = isLegacyPortfolio ? undefined : value;
+    && value.length < DEFAULT_PORTFOLIO.projects.length
+    && value.every(project => previousDefaultIds.has(String(project?.id || '').toLowerCase()));
+  const source = isPreviousDefaultPortfolio ? undefined : value;
   return normalizeEntities(source, DEFAULT_PORTFOLIO.projects, 'project', (raw, fallback, id, index) => {
     const githubInput = isPlainObject(raw.github) ? raw.github : {};
     const githubFallback = isPlainObject(fallback.github) ? fallback.github : {};
