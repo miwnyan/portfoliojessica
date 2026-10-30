@@ -723,6 +723,22 @@ function initContactForm() {
   });
 }
 
+function initPortfolioChat() {
+  const mount = async () => {
+    try {
+      const { renderChatbot } = await import('./chatbot.jsx');
+      renderChatbot(byId('chatbot-root'), () => state.data);
+    } catch (error) {
+      console.warn('Portfólio: o assistente virtual não pôde ser carregado.', error);
+    }
+  };
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(mount, { timeout: 1200 });
+  } else {
+    window.setTimeout(mount, 120);
+  }
+}
+
 async function boot() {
   renderHeroMoon(byId('hero-moon-root'));
   renderPortfolio(state.data, { resetFolderState: true });
@@ -731,6 +747,7 @@ async function boot() {
   initContentInteractions();
   initBunnyInteraction();
   initContactForm();
+  initPortfolioChat();
   try {
     const { loadPortfolio } = await import('./data-service.js');
     const remoteData = await loadPortfolio();

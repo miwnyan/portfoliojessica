@@ -24,6 +24,7 @@ O conteúdo editável é persistido no Cloud Firestore, o login usa Firebase Aut
 | Cloud Firestore Standard | conteúdo público e lista de administradores |
 | Cloudinary | capas, GIFs, favicon, coelhinho e ícones personalizados |
 | Namecheap Private Email | recebimento das mensagens do formulário por SMTP |
+| GroqCloud | respostas do assistente virtual sobre o portfólio |
 | Vercel ou Firebase Hosting | hospedagem dos arquivos gerados em `dist/` |
 
 Todo o conteúdo público fica em um único documento, `portfolio/public`. Essa escolha reduz cada carregamento do portfólio a uma leitura, mantém uma publicação atômica e aproveita melhor a franquia gratuita. As imagens não são gravadas no documento: o Firestore armazena apenas suas URLs e metadados.
@@ -136,6 +137,8 @@ CONTACT_EMAIL=contato@jessicamontes.space
 SMTP_FROM_NAME=Portfólio da Jéssica
 DISCORD_WEBHOOK_URL=
 DISCORD_CONTACT_USER_ID=1215077795651133479
+GROQ_API_KEY=
+GROQ_MODEL=openai/gpt-oss-20b
 ```
 
 Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro as variáveis `VITE_CLOUDINARY_*` compiladas e, se necessário, consulta `/api/public-config` em runtime; os aliases `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_UPLOAD_PRESET` também são aceitos. Esses dois identificadores são públicos.
@@ -143,6 +146,23 @@ Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel ten
 O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` é a senha da caixa postal `contato@jessicamontes.space`, não a senha da conta Namecheap. Todas as variáveis `SMTP_*` são privadas, ficam somente no servidor e nunca devem receber o prefixo `VITE_`. O remetente autenticado permanece `SMTP_USER`; o e-mail informado pelo visitante é aplicado em `Reply-To`, permitindo responder diretamente.
 
 `DISCORD_WEBHOOK_URL` também é privada e funciona como notificação adicional opcional. Se o SMTP estiver configurado, o formulário só confirma o envio depois que o servidor da Namecheap aceitar a mensagem; uma falha isolada do Discord não impede o recebimento por e-mail.
+
+## Assistente virtual
+
+O botão animado no canto inferior direito abre a Lumi, assistente do portfólio. Ela mantém conversas neste dispositivo, permite marcar conversas importantes, oferece respostas locais para perguntas frequentes e usa a Groq somente quando precisa interpretar uma dúvida mais específica. O mesmo painel também envia mensagens pela rota `/api/contact`, tanto pelo formulário quanto por um fluxo guiado na própria conversa. Nome, e-mail e mensagem desse fluxo não são enviados à Groq nem persistidos no histórico local. URLs e e-mails apresentados nas respostas são transformados em links clicáveis.
+
+Para ativar as respostas por IA, crie uma chave no GroqCloud e configure no `.env`:
+
+```dotenv
+GROQ_API_KEY=sua-chave-privada
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+Nunca use `VITE_GROQ_API_KEY`: qualquer variável `VITE_*` é exposta ao navegador. O modelo padrão é o GPT-OSS 20B em modo de raciocínio baixo, com resposta curta e estruturada. Perguntas simples, como apresentação, lista de projetos, habilidades, saudações e contato, são respondidas localmente e não consomem tokens.
+
+A proteção contra prompt injection combina system prompt privado no servidor, escopo limitado ao portfólio, validação do contexto, detecção de padrões de manipulação, histórico e tamanho limitados, rate limit, saída JSON Schema estrita e validação final. Nenhuma defesa de LLM é absoluta; por isso a IA não possui ferramentas, não envia e-mails e não executa ações. O envio de contato só acontece pelo formulário explícito.
+
+Sem `GROQ_API_KEY`, o widget e as respostas locais continuam disponíveis e dúvidas que dependeriam da IA orientam o visitante a entrar em contato. O servidor Vite executa `/api/chat` e `/api/contact` localmente, então basta reiniciar `npm run dev` depois de alterar o `.env`.
 
 ## 4. Publicar na Vercel
 
@@ -155,7 +175,7 @@ O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` 
 
 O [vercel.json](vercel.json) preserva a rota limpa `/admin` e adiciona cabeçalhos básicos de segurança. Cada alteração de uma variável `VITE_*` exige um novo deploy, pois o valor é incorporado no build.
 
-O formulário de contato depende da função serverless `/api/contact` e, portanto, precisa da publicação pela Vercel (ou de uma função equivalente em outro provedor). Cadastre `SMTP_PASSWORD` como valor sensível e faça um novo deploy sempre que adicionar ou alterar qualquer variável. O envio SMTP é aguardado pela função antes da resposta de sucesso.
+O formulário de contato e o assistente dependem das funções serverless `/api/contact` e `/api/chat` e, portanto, precisam da publicação pela Vercel (ou de funções equivalentes em outro provedor). Cadastre `SMTP_PASSWORD` e `GROQ_API_KEY` como valores sensíveis e faça um novo deploy sempre que adicionar ou alterar qualquer variável. O envio SMTP é aguardado pela função antes da resposta de sucesso.
 
 ## 5. Publicar no Firebase Hosting
 
