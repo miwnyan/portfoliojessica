@@ -18,7 +18,7 @@ import {
   validateMediaFile,
   MAX_UPLOAD_BYTES
 } from '../js/media-service.js';
-import { importGitHubRepository } from '../js/github-service.js';
+import { importGitHubRepository, parseGitHubRepository } from '../js/github-service.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -68,7 +68,8 @@ const elements = {
   confirmMessage: $('#confirm-message'),
   confirmAccept: $('#confirm-accept'),
   confirmCancel: $('#confirm-cancel'),
-  toastRegion: $('#toast-region')
+  toastRegion: $('#toast-region'),
+  assistantRoot: $('#admin-assistant-root')
 };
 
 const SECTION_META = {
@@ -96,7 +97,8 @@ const state = {
   githubController: null,
   confirmResolve: null,
   drag: null,
-  uploadControllers: new Map()
+  uploadControllers: new Map(),
+  assistantRenderer: null
 };
 
 function deepClone(value) {
@@ -1071,6 +1073,280 @@ function normalizeGitHubResult(result, input) {
   };
 }
 
+const ASSISTANT_FIELDS = Object.freeze({
+  project: ['name', 'summary', 'description', 'technologies', 'coverUrl', 'coverPublicId', 'repositoryUrl', 'homepageUrl', 'visible'],
+  experience: ['period', 'startDate', 'endDate', 'title', 'institution', 'description', 'visible'],
+  folder: ['name', 'color', 'colorDeep', 'openByDefault', 'visible'],
+  skill: ['folderId', 'name', 'title', 'badge', 'status', 'iconId', 'iconUrl', 'certificateUrl', 'description', 'details', 'visible'],
+  contact: ['type', 'label', 'url', 'iconId', 'iconUrl', 'ariaLabel', 'title', 'visible']
+});
+
+function assistantPayload(operation) {
+  try {
+    const value = JSON.parse(String(operation?.payloadJson || '{}'));
+    if (!isPlainObject(value)) throw new Error();
+    return value;
+  } catch {
+    throw new Error('A Nyan retornou uma proposta inválida. Tente reformular o pedido.');
+  }
+}
+
+function safeAssistantValue(value, currentValue) {
+  if (typeof currentValue === 'boolean') return typeof value === 'boolean' ? value : currentValue;
+  if (typeof currentValue === 'number') return Number.isFinite(Number(value)) ? Number(value) : currentValue;
+  if (Array.isArray(currentValue)) {
+    return Array.isArray(value)
+      ? value.filter(item => typeof item === 'string').map(item => item.trim().slice(0, 500)).filter(Boolean).slice(0, 50)
+      : currentValue;
+  }
+  if (typeof currentValue === 'string') return typeof value === 'string' ? value.trim().slice(0, 10000) : currentValue;
+  return currentValue;
+}
+
+function safeAssistantUrl(value, { allowLocal = true, allowContact = false } = {}) {
+  const text = typeof value === 'string' ? value.trim().slice(0, 2048) : '';
+  if (!text) return '';
+  if (allowLocal && /^\/(?!\/)/.test(text)) return text;
+  if (allowContact) {
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return `mailto:${text}`;
+    if (/^#[A-Za-z][\w:.-]*$/.test(text) || /^(?:mailto|tel):[^\s]+$/i.test(text)) return text;
+  }
+  try {
+    const parsed = new URL(text);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.href;
+  } catch {
+    // A URL inválida será recusada abaixo.
+  }
+  throw new Error('A proposta contém um link inválido ou inseguro.');
+}
+
+function assistantEntityChanges(type, changes, current) {
+  if (!ASSISTANT_FIELDS[type] || !isPlainObject(changes)) throw new Error('A proposta contém um tipo de item inválido.');
+  const result = {};
+  ASSISTANT_FIELDS[type].forEach(field => {
+    if (!(field in changes) || !(field in current)) return;
+    if (['coverUrl', 'repositoryUrl', 'homepageUrl', 'iconUrl', 'certificateUrl'].includes(field)) {
+      result[field] = safeAssistantUrl(changes[field]);
+    } else if (type === 'contact' && field === 'url') {
+      result[field] = safeAssistantUrl(changes[field], { allowContact: true });
+    } else if (['color', 'colorDeep'].includes(field)) {
+      const color = String(changes[field] || '').trim();
+      if (!/^#[0-9a-f]{6}$/i.test(color)) throw new Error('A proposta contém uma cor inválida.');
+      result[field] = color.toLowerCase();
+    } else if (type === 'contact' && field === 'type') {
+      result[field] = ['external', 'anchor', 'email', 'phone'].includes(changes[field]) ? changes[field] : current[field];
+    } else {
+      result[field] = safeAssistantValue(changes[field], current[field]);
+    }
+  });
+  return result;
+}
+
+function requireAssistantText(value, label) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!text) throw new Error(`A proposta ainda precisa informar ${label}.`);
+  return text;
+}
+
+function normalizeAssistantRepository(message) {
+  const url = String(message || '').match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z\d-]+\/[A-Za-z\d_.-]+/i)?.[0];
+  const short = String(message || '').match(/(?:^|\s)([A-Za-z\d-]+\/[A-Za-z\d_.-]+)(?=$|[\s,.;])/i)?.[1];
+  const candidate = url || short;
+  if (!candidate) return '';
+  try {
+    const parsed = parseGitHubRepository(candidate);
+    return `${parsed.owner}/${parsed.repository}`;
+  } catch {
+    return '';
+  }
+}
+
+async function prepareAssistantGitHubCandidate(message) {
+  const repository = normalizeAssistantRepository(message);
+  if (!repository) return null;
+  const result = await importGitHubRepository(repository, { includeImages: true });
+  return { ...normalizeGitHubResult(result, repository), repositoryImages: result.repositoryImages || [] };
+}
+
+async function applyAssistantProposal(operations) {
+  if (!state.user || !state.portfolio) throw new Error('Sua sessão administrativa não está disponível.');
+  if (!Array.isArray(operations) || operations.length === 0 || operations.length > 12) {
+    throw new Error('A proposta da Nyan está vazia ou é grande demais.');
+  }
+
+  const backup = deepClone(state.portfolio);
+  let requestedSection = '';
+  let shouldSave = false;
+  let changed = false;
+
+  try {
+    for (const operation of operations) {
+      const payload = assistantPayload(operation);
+      if (operation.type === 'add_experience') {
+        const base = blankEntity('experience');
+        const value = { ...base, ...assistantEntityChanges('experience', payload, base) };
+        requireAssistantText(value.title, 'o cargo ou título da experiência');
+        requireAssistantText(value.institution, 'a instituição da experiência');
+        requireAssistantText(value.period, 'o período da experiência');
+        requireAssistantText(value.description, 'a descrição da experiência');
+        state.portfolio.experiences.push(value);
+        requestedSection = requestedSection || 'experiences';
+        changed = true;
+      } else if (operation.type === 'add_project') {
+        const base = blankEntity('project');
+        const value = { ...base, ...assistantEntityChanges('project', payload, base), source: 'manual' };
+        requireAssistantText(value.name, 'o nome do projeto');
+        requireAssistantText(value.description || value.summary, 'a descrição do projeto');
+        requireAssistantText(value.coverUrl, 'a imagem de capa do projeto');
+        state.portfolio.projects.push(value);
+        requestedSection = requestedSection || 'projects';
+        changed = true;
+      } else if (operation.type === 'import_github_project') {
+        const repository = requireAssistantText(payload.repository, 'o repositório do GitHub');
+        const result = await importGitHubRepository(repository, { includeImages: true });
+        const candidate = normalizeGitHubResult(result, repository);
+        const duplicate = state.portfolio.projects.some(project => project.repositoryUrl?.replace(/\/$/, '').toLowerCase() === candidate.repositoryUrl.replace(/\/$/, '').toLowerCase());
+        if (duplicate) throw new Error('Esse repositório já está cadastrado no portfólio.');
+        const description = typeof payload.description === 'string' && payload.description.trim()
+          ? payload.description.trim()
+          : (candidate.description || candidate.summary);
+        requireAssistantText(description, 'a descrição do projeto importado');
+        state.portfolio.projects.push(blankEntity('project', {
+          ...candidate,
+          id: createId('project'),
+          description,
+          summary: candidate.summary || description.slice(0, 260),
+          source: 'github',
+          visible: true
+        }));
+        requestedSection = requestedSection || 'projects';
+        changed = true;
+      } else if (operation.type === 'add_folder') {
+        const base = blankEntity('folder');
+        const value = { ...base, ...assistantEntityChanges('folder', payload, base) };
+        requireAssistantText(value.name, 'o nome da pasta');
+        state.portfolio.folders.push(value);
+        requestedSection = requestedSection || 'folders';
+        changed = true;
+      } else if (operation.type === 'add_skill') {
+        const requestedFolderName = String(payload.folderName || '').trim().toLowerCase();
+        const resolvedFolderId = state.portfolio.folders.some(folder => folder.id === payload.folderId)
+          ? payload.folderId
+          : state.portfolio.folders.find(folder => folder.name.toLowerCase() === requestedFolderName)?.id;
+        const base = blankEntity('skill', resolvedFolderId ? { folderId: resolvedFolderId } : {});
+        const value = { ...base, ...assistantEntityChanges('skill', payload, base) };
+        requireAssistantText(value.name, 'o nome da habilidade');
+        if (!value.folderId) throw new Error('Crie ou informe uma pasta para a nova habilidade.');
+        state.portfolio.skills.push(value);
+        requestedSection = requestedSection || 'folders';
+        changed = true;
+      } else if (operation.type === 'add_contact') {
+        const base = blankEntity('contact');
+        const value = { ...base, ...assistantEntityChanges('contact', payload, base) };
+        requireAssistantText(value.label, 'o nome do contato');
+        requireAssistantText(value.url, 'o link do contato');
+        state.portfolio.contacts.push(value);
+        requestedSection = requestedSection || 'contact';
+        changed = true;
+      } else if (operation.type === 'update_entity') {
+        const type = String(payload.entityType || '');
+        const id = String(payload.id || '');
+        const current = findEntity(type, id);
+        if (!current) throw new Error('Não encontrei o item que a Nyan tentou atualizar.');
+        Object.assign(current, assistantEntityChanges(type, payload.changes, current));
+        if (type === 'project') requireAssistantText(current.name, 'o nome do projeto');
+        if (type === 'experience') requireAssistantText(current.title, 'o título da experiência');
+        if (type === 'folder') requireAssistantText(current.name, 'o nome da pasta');
+        if (type === 'skill') {
+          requireAssistantText(current.name, 'o nome da habilidade');
+          if (!state.portfolio.folders.some(folder => folder.id === current.folderId)) throw new Error('A pasta escolhida para a habilidade não existe.');
+        }
+        if (type === 'contact') {
+          requireAssistantText(current.label, 'o nome do contato');
+          requireAssistantText(current.url, 'o link do contato');
+        }
+        requestedSection = requestedSection || ({ project: 'projects', experience: 'experiences', folder: 'folders', skill: 'folders', contact: 'contact' }[type] || 'overview');
+        changed = true;
+      } else if (operation.type === 'remove_entity') {
+        const type = String(payload.entityType || '');
+        const id = String(payload.id || '');
+        const key = COLLECTION_FOR_TYPE[type];
+        if (!key || !state.portfolio[key].some(item => item.id === id)) throw new Error('Não encontrei o item que a Nyan tentou remover.');
+        state.portfolio[key] = state.portfolio[key].filter(item => item.id !== id);
+        if (type === 'folder') state.portfolio.skills = state.portfolio.skills.filter(item => item.folderId !== id);
+        requestedSection = requestedSection || ({ project: 'projects', experience: 'experiences', folder: 'folders', skill: 'folders', contact: 'contact' }[type] || 'overview');
+        changed = true;
+      } else if (operation.type === 'set_setting') {
+        const path = String(payload.path || '');
+        if (!/^settings(?:\.[A-Za-z][A-Za-z0-9_]*){2,4}$/.test(path) || /(?:^|\.)(?:__proto__|prototype|constructor)(?:\.|$)/.test(path)) {
+          throw new Error('A proposta tentou alterar uma configuração não permitida.');
+        }
+        const missing = Symbol('missing-setting');
+        const currentValue = getPath(state.portfolio, path, missing);
+        if (currentValue === missing || (isPlainObject(currentValue) && !Array.isArray(currentValue))) {
+          throw new Error('A configuração solicitada não existe no painel.');
+        }
+        let nextValue = safeAssistantValue(payload.value, currentValue);
+        if (/(?:Url|URL)$/.test(path)) nextValue = safeAssistantUrl(payload.value);
+        if (/settings\.theme\.(?:bg|panel|panelAlt|border|accent|accentLight|accentDeep|text|muted)$/.test(path)) {
+          const color = String(payload.value || '').trim();
+          if (!/^#[0-9a-f]{6}$/i.test(color)) throw new Error('A proposta contém uma cor de tema inválida.');
+          nextValue = color.toLowerCase();
+        }
+        if (path === 'settings.theme.radius' && !/^\d+(?:\.\d+)?(?:px|rem|em|%)$/i.test(String(payload.value || '').trim())) {
+          throw new Error('A proposta contém um raio de borda inválido.');
+        }
+        if (/Email$/.test(path) && nextValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextValue)) {
+          throw new Error('A proposta contém um e-mail inválido.');
+        }
+        setPath(state.portfolio, path, nextValue);
+        requestedSection = requestedSection || (path.startsWith('settings.theme.') || path.startsWith('settings.meta.') || path.startsWith('settings.about.bunny') ? 'appearance' : 'page');
+        changed = true;
+      } else if (operation.type === 'navigate') {
+        const section = String(payload.section || '');
+        if (!SECTION_META[section]) throw new Error('A seção solicitada não existe no painel.');
+        requestedSection = section;
+      } else if (operation.type === 'save_portfolio') {
+        shouldSave = true;
+      } else {
+        throw new Error('A proposta contém uma operação não permitida.');
+      }
+    }
+
+    ['projects', 'experiences', 'folders', 'contacts'].forEach(key => normalizeOrder(state.portfolio[key]));
+    state.portfolio.folders.forEach(folder => normalizeOrder(state.portfolio.skills, item => item.folderId === folder.id));
+    if (changed) markDirty('Alterações propostas pela Nyan aplicadas.');
+    if (requestedSection) navigateSection(requestedSection, { focusMain: false });
+    else render();
+    if (shouldSave && changed) await saveChanges();
+    toast(shouldSave && changed ? 'Alterações aplicadas e publicadas.' : 'Alterações aplicadas. Revise e salve quando estiver tudo certo.', 'success', 5600);
+    return { message: shouldSave && changed ? 'Pronto: apliquei e publiquei as alterações.' : 'Pronto: apliquei a proposta ao painel. Revise o resultado e clique em “Salvar alterações” quando estiver tudo certo.' };
+  } catch (error) {
+    state.portfolio = backup;
+    render();
+    throw error;
+  }
+}
+
+async function initAdminAssistant() {
+  if (state.assistantRenderer || !elements.assistantRoot || !state.user) return;
+  const { renderAdminAssistant } = await import('./admin-assistant.jsx');
+  if (!state.user || elements.app.hidden) return;
+  state.assistantRenderer = renderAdminAssistant(elements.assistantRoot, {
+    getPortfolioData: () => deepClone(state.portfolio),
+    getSection: () => state.section,
+    getIdToken: forceRefresh => state.user?.getIdToken(Boolean(forceRefresh)),
+    prepareGitHubCandidate: prepareAssistantGitHubCandidate,
+    applyProposal: applyAssistantProposal
+  });
+}
+
+function destroyAdminAssistant() {
+  state.assistantRenderer?.unmount?.();
+  state.assistantRenderer = null;
+  elements.assistantRoot?.replaceChildren();
+}
+
 async function handleGitHubSubmit(event) {
   event.preventDefault();
   elements.githubError.hidden = true;
@@ -1590,6 +1866,7 @@ async function handleAuthenticatedUser(user) {
     elements.userEmail.textContent = user.email || 'Conta administrativa';
     showOnly('app');
     render();
+    await initAdminAssistant();
     state.initialized = true;
   } catch (error) {
     showOnly('login');
@@ -1601,6 +1878,7 @@ async function handleAuthenticatedUser(user) {
 }
 
 function handleSignedOut() {
+  destroyAdminAssistant();
   state.user = null;
   state.portfolio = null;
   state.savedSignature = '';

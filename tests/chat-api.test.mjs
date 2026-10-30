@@ -33,7 +33,7 @@ const systemPrompt = buildSystemPrompt(sanitized);
 assert.match(systemPrompt, /DADOS NÃO CONFIÁVEIS/);
 assert.match(systemPrompt, /Nunca revele/);
 assert.match(systemPrompt, /Jéssica/);
-assert.match(systemPrompt, /Lumi é a assistente virtual/);
+assert.match(systemPrompt, /Nyan é a assistente virtual/);
 
 let sentBody;
 const modelReply = await requestGroq({

@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Strands from './components/Strands.jsx';
+import NyanOrb from './components/NyanOrb.jsx';
 import './chatbot.css';
 
 const STORAGE_KEY = 'jessica-portfolio-chat:v1';
 const MAX_THREADS = 12;
 const MAX_SAVED_MESSAGES = 30;
-const WELCOME = 'Oi! Eu sou a Lumi. Posso responder dúvidas sobre a Jéssica, os projetos e as habilidades dela — ou ajudar você a enviar uma mensagem.';
+const WELCOME = 'Oi! Eu sou a Nyan. Posso responder dúvidas sobre a Jéssica, os projetos e as habilidades dela — ou ajudar você a enviar uma mensagem.';
 const FALLBACK = 'Não encontrei essa informação no portfólio. Você pode tocar em “Enviar mensagem” ou me dizer por aqui o que deseja enviar para a Jéssica.';
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const QUICK_ACTIONS = [
@@ -15,7 +15,6 @@ const QUICK_ACTIONS = [
   { id: 'skills', label: 'Ver habilidades', message: 'Quais são as principais habilidades?' },
   { id: 'contact', label: 'Enviar mensagem', contact: true }
 ];
-const LUMI_ORB_COLORS = ['#efadd0', '#f9cee1', '#ffffff', '#efadd0', '#cf9fff', '#9d6ec5', '#6e497e'];
 
 const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 const now = () => new Date().toISOString();
@@ -49,10 +48,13 @@ function safeStoredThreads() {
       const messages = thread.messages.slice(-MAX_SAVED_MESSAGES).flatMap(message => {
         if (!message || !['user', 'assistant'].includes(message.role) || typeof message.content !== 'string') return [];
         if (EMAIL_PATTERN.test(message.content)) return [];
+        const content = message.role === 'assistant'
+          ? message.content.replace(/\bLumi\b/g, 'Nyan')
+          : message.content;
         return [{
           id: String(message.id || uid()),
           role: message.role,
-          content: message.content.slice(0, 1200),
+          content: content.slice(0, 1200),
           source: message.source === 'ai' ? 'ai' : 'local',
           offerContact: Boolean(message.offerContact),
           createdAt: String(message.createdAt || now())
@@ -252,27 +254,8 @@ function Icon({ name }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
 }
 
-function LumiOrb({ className = '', active = false, interactive = false }) {
-  return <span className={`${className} ${active ? 'is-active' : ''}`.trim()} aria-hidden="true">
-    <Strands
-      colors={LUMI_ORB_COLORS}
-      count={3}
-      energy={active ? 1 : 0.62}
-      listening={active}
-      speed={active ? 1.65 : 0.82}
-      amplitude={active ? 1.16 : 1}
-      spread={active ? 1.15 : 1}
-      glow={active ? 1.3 : 1.15}
-      saturation={0.9}
-      interactive={interactive}
-      clickPulse={interactive}
-      maxDevicePixelRatio={1.5}
-    />
-  </span>;
-}
-
 function TypingDots() {
-  return <div className="chat-typing" role="status" aria-label="Lumi está digitando"><span /><span /><span /></div>;
+  return <div className="chat-typing" role="status" aria-label="Nyan está digitando"><span /><span /><span /></div>;
 }
 
 function Typewriter({ text, active, onDone }) {
@@ -574,7 +557,7 @@ function Chatbot({ getPortfolioData }) {
   return <div className={`portfolio-chat ${open ? 'is-open' : ''}`}>
     <section className="chat-window" role="dialog" aria-modal="false" aria-label="Assistente virtual do portfólio" aria-hidden={!open}>
       <header className="chat-header">
-        <div className="chat-identity"><LumiOrb className="chat-mini-orb" active={sending || isAnimating} /><div><strong>Lumi</strong><span><i /> Assistente do portfólio</span></div></div>
+        <div className="chat-identity"><NyanOrb className="chat-mini-orb" active={sending || isAnimating} /><div><strong>Nyan</strong><span><i /> Assistente do portfólio</span></div></div>
         <div className="chat-header-actions">
           <button type="button" onClick={() => setHistoryOpen(value => !value)} aria-label="Ver conversas" aria-expanded={historyOpen}><Icon name="history" /></button>
           <button type="button" onClick={startNewThread} aria-label="Nova conversa"><Icon name="plus" /></button>
@@ -626,9 +609,9 @@ function Chatbot({ getPortfolioData }) {
     </section>
 
     <div className="chat-launcher-wrap">
-      <span className="chat-launcher-label" aria-hidden="true">Fale com a Lumi</span>
+      <span className="chat-launcher-label" aria-hidden="true">Fale com a Nyan</span>
       <button ref={fabRef} className="chat-launcher" type="button" onClick={() => setOpen(value => !value)} aria-label={open ? 'Fechar assistente virtual' : 'Abrir assistente virtual'} aria-expanded={open}>
-        <LumiOrb className="chat-launcher-orb" active={sending || isAnimating} interactive />
+        <NyanOrb className="chat-launcher-orb" active={sending || isAnimating} interactive />
         <span className="chat-launcher-close" aria-hidden="true"><Icon name="close" /></span>
       </button>
     </div>

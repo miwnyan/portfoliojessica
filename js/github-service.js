@@ -110,6 +110,52 @@ function rateLimitError(response) {
   );
 }
 
+const IMAGE_EXTENSION = /\.(?:png|jpe?g|webp|gif)$/i;
+
+function imageScore(path) {
+  const normalized = String(path || '').toLowerCase();
+  let score = 0;
+  if (/(?:^|\/)(?:cover|preview|screenshot|hero|banner|demo)[-_ .]/.test(normalized)) score += 80;
+  if (/(?:cover|preview|screenshot|hero|banner|demo)/.test(normalized)) score += 45;
+  if (/(?:^|\/)(?:assets|images?|screenshots?|public|static)\//.test(normalized)) score += 25;
+  if (/readme|docs?\//.test(normalized)) score += 8;
+  if (/icon|logo|favicon|avatar|badge|sprite|thumbnail/.test(normalized)) score -= 35;
+  score -= normalized.split('/').length;
+  return score;
+}
+
+async function fetchRepositoryImages({ owner, repository, branch, fetchImplementation, signal }) {
+  if (!branch) return [];
+  const endpoint = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
+  try {
+    const response = await fetchImplementation(endpoint, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      signal
+    });
+    if (!response.ok) return [];
+    const data = await responseBody(response);
+    const rawBase = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/${encodeURIComponent(branch)}/`;
+    return (Array.isArray(data?.tree) ? data.tree : [])
+      .filter(item => item?.type === 'blob' && IMAGE_EXTENSION.test(String(item.path || '')) && Number(item.size || 0) <= 12 * 1024 * 1024)
+      .map(item => ({
+        path: cleanText(item.path, 500),
+        url: `${rawBase}${String(item.path || '').split('/').map(encodeURIComponent).join('/')}`,
+        score: imageScore(item.path)
+      }))
+      .filter(item => item.path)
+      .sort((a, b) => b.score - a.score || a.path.length - b.path.length)
+      .slice(0, 12)
+      .map(({ path, url }) => ({ path, url }));
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    return [];
+  }
+}
+
 /**
  * Consulta somente o endpoint público de repositórios. Não lê README, não
  * interpreta HTML e não usa token do navegador.
@@ -181,6 +227,17 @@ export async function fetchPublicRepository(input, options = {}) {
   const technologies = [...new Set([language, ...topics].filter(Boolean))];
   const repositoryUrl = `https://github.com/${encodeURIComponent(canonicalOwner)}/${encodeURIComponent(canonicalRepository)}`;
   const previewVersion = Number.isSafeInteger(data.id) ? data.id : 1;
+  const defaultBranch = cleanText(data.default_branch, 220);
+  const repositoryImages = options.includeImages
+    ? await fetchRepositoryImages({
+      owner: canonicalOwner,
+      repository: canonicalRepository,
+      branch: defaultBranch,
+      fetchImplementation,
+      signal: options.signal
+    })
+    : [];
+  const fallbackCover = `https://opengraph.githubassets.com/${previewVersion}/${encodeURIComponent(canonicalOwner)}/${encodeURIComponent(canonicalRepository)}`;
 
   return {
     id: projectId(canonicalOwner, canonicalRepository),
@@ -190,7 +247,7 @@ export async function fetchPublicRepository(input, options = {}) {
     summary: cleanText(data.description, 800),
     description: '',
     technologies,
-    coverUrl: `https://opengraph.githubassets.com/${previewVersion}/${encodeURIComponent(canonicalOwner)}/${encodeURIComponent(canonicalRepository)}`,
+    coverUrl: repositoryImages[0]?.url || fallbackCover,
     coverPublicId: '',
     repositoryUrl,
     homepageUrl: safeHttpUrl(data.homepage),
@@ -199,7 +256,7 @@ export async function fetchPublicRepository(input, options = {}) {
       owner: canonicalOwner,
       repo: canonicalRepository,
       fullName: `${canonicalOwner}/${canonicalRepository}`,
-      defaultBranch: cleanText(data.default_branch, 220),
+      defaultBranch,
       language,
       topics,
       archived: data.archived === true,
@@ -207,7 +264,8 @@ export async function fetchPublicRepository(input, options = {}) {
       stars: Number.isFinite(data.stargazers_count) ? data.stargazers_count : 0,
       forks: Number.isFinite(data.forks_count) ? data.forks_count : 0,
       updatedAt: cleanText(data.updated_at, 40)
-    }
+    },
+    repositoryImages
   };
 }
 

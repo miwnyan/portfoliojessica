@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/data-service.test.mjs && node tests/public-config-api.test.mjs && node tests/contact-api.test.mjs && node tests/chat-api.test.mjs"
+    "test": "node tests/data-service.test.mjs && node tests/public-config-api.test.mjs && node tests/contact-api.test.mjs && node tests/chat-api.test.mjs && node tests/admin-chat-api.test.mjs && node tests/github-service.test.mjs"
   },
   "dependencies": {
     "firebase": "^13.0.0",

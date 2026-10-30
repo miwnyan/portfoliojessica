@@ -149,7 +149,9 @@ O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` 
 
 ## Assistente virtual
 
-O botão animado no canto inferior direito abre a Lumi, assistente do portfólio. Ela mantém conversas neste dispositivo, permite marcar conversas importantes, oferece respostas locais para perguntas frequentes e usa a Groq somente quando precisa interpretar uma dúvida mais específica. O mesmo painel também envia mensagens pela rota `/api/contact`, tanto pelo formulário quanto por um fluxo guiado na própria conversa. Nome, e-mail e mensagem desse fluxo não são enviados à Groq nem persistidos no histórico local. URLs e e-mails apresentados nas respostas são transformados em links clicáveis.
+O botão animado no canto inferior direito abre a Nyan, assistente do portfólio. Ela mantém conversas neste dispositivo, permite marcar conversas importantes, oferece respostas locais para perguntas frequentes e usa a Groq somente quando precisa interpretar uma dúvida mais específica. O mesmo painel também envia mensagens pela rota `/api/contact`, tanto pelo formulário quanto por um fluxo guiado na própria conversa. Nome, e-mail e mensagem desse fluxo não são enviados à Groq nem persistidos no histórico local. URLs e e-mails apresentados nas respostas são transformados em links clicáveis.
+
+Depois que uma conta autorizada entra em `/admin`, uma segunda instância da Nyan é carregada exclusivamente no painel. Ela recebe o estado atual, pode montar propostas para criar ou editar experiências, projetos, habilidades, contatos e configurações, e importa projetos públicos do GitHub procurando uma imagem no próprio repositório. Toda proposta precisa ser confirmada antes de alterar o painel. A rota `/api/admin-chat` valida no servidor tanto o Firebase ID token quanto o registro ativo em `admins/{uid}`; o widget público não recebe credenciais nem acesso a essa rota.
 
 Para ativar as respostas por IA, crie uma chave no GroqCloud e configure no `.env`:
 

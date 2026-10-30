@@ -24,7 +24,7 @@ with sync_playwright() as playwright:
 
     desktop.get_by_role("button", name="Abrir assistente virtual").click()
     desktop.locator(".portfolio-chat.is-open").wait_for()
-    desktop.get_by_text("Oi! Eu sou a Lumi.").wait_for()
+    desktop.get_by_text("Oi! Eu sou a Nyan.").wait_for()
     desktop.wait_for_timeout(550)
     assert desktop.locator(".chat-mini-orb canvas").count() == 1
     assert desktop.locator(".chat-launcher-orb canvas").count() == 1
@@ -49,7 +49,7 @@ with sync_playwright() as playwright:
     desktop.get_by_role("button", name="Voltar à conversa").click()
 
     identity_requests = len(chat_requests)
-    desktop.locator("#portfolio-chat-input").fill("O que é Lumi?")
+    desktop.locator("#portfolio-chat-input").fill("O que é Nyan?")
     with desktop.expect_response(lambda response: "/api/chat" in response.url, timeout=20000) as response_info:
         desktop.get_by_role("button", name="Enviar pergunta").click()
         desktop.locator(".chat-mini-orb.is-active").wait_for(timeout=3000)
@@ -58,9 +58,9 @@ with sync_playwright() as playwright:
     identity_result = response_info.value.json()
     assert identity_result["ok"] is True
     assert identity_result["source"] == "portfolio"
-    assert "Lumi" in identity_result["answer"] and "assistente virtual" in identity_result["answer"]
+    assert "Nyan" in identity_result["answer"] and "assistente virtual" in identity_result["answer"]
     desktop.get_by_text(identity_result["answer"], exact=True).wait_for(timeout=10000)
-    assert len(chat_requests) > identity_requests, "A pergunta sobre a Lumi deveria chegar à API."
+    assert len(chat_requests) > identity_requests, "A pergunta sobre a Nyan deveria chegar à API."
     assert desktop.get_by_text("As conversas ficam salvas somente neste dispositivo.").count() == 0
 
     desktop.locator("#portfolio-chat-input").fill("A Jéssica possui disponibilidade imediata para projetos internacionais?")

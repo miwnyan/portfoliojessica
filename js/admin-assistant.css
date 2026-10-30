@@ -1,0 +1,138 @@
+.admin-nyan {
+  position: fixed;
+  z-index: 900;
+  right: 22px;
+  bottom: 22px;
+  font-family: var(--admin-font, "Manrope", sans-serif);
+}
+
+.admin-nyan-panel {
+  position: absolute;
+  right: 0;
+  bottom: 72px;
+  width: min(410px, calc(100vw - 32px));
+  height: min(650px, calc(100vh - 116px));
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  overflow: hidden;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 20px;
+  background: rgba(15, 12, 16, .97);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .56), 0 0 0 1px rgba(239, 173, 208, .04) inset;
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(18px) scale(.94);
+  transform-origin: bottom right;
+  transition: opacity .24s ease, visibility .24s ease, transform .38s var(--admin-ease);
+}
+
+.admin-nyan.is-open .admin-nyan-panel { opacity: 1; visibility: visible; transform: none; }
+
+.admin-nyan-header {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-nyan-identity { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.admin-nyan-identity > div { display: grid; line-height: 1.25; }
+.admin-nyan-identity strong { font-size: 15px; }
+.admin-nyan-identity span { color: var(--admin-muted); font-size: 11px; }
+.admin-nyan-identity i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--admin-success); box-shadow: 0 0 10px rgba(169, 221, 195, .55); }
+
+.admin-nyan-orb,
+.admin-nyan-launcher-orb { position: relative; display: block; overflow: hidden; border-radius: 50%; background: #070608; }
+.admin-nyan-orb { width: 42px; height: 42px; border: 1px solid var(--admin-border-strong); }
+.admin-nyan-orb canvas,
+.admin-nyan-launcher-orb canvas { width: 100% !important; height: 100% !important; }
+
+.admin-nyan-icon-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--admin-muted-strong);
+  background: transparent;
+  border-radius: 9px;
+}
+.admin-nyan-icon-button:hover { color: var(--admin-text); background: var(--admin-panel-soft); }
+.admin-nyan-icon-button svg { width: 19px; }
+
+.admin-nyan-messages { min-height: 0; overflow-y: auto; padding: 18px 14px; scrollbar-width: thin; scrollbar-color: var(--admin-border-strong) transparent; }
+.admin-nyan-message { display: grid; justify-items: start; margin-bottom: 13px; }
+.admin-nyan-message.is-user { justify-items: end; }
+.admin-nyan-bubble {
+  max-width: 90%;
+  padding: 11px 13px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px 16px 16px 16px;
+  color: var(--admin-text);
+  background: var(--admin-panel-soft);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-nyan-message.is-user .admin-nyan-bubble { border-color: rgba(239, 173, 208, .5); border-radius: 16px 6px 16px 16px; color: #24131e; background: var(--admin-accent-light); }
+.admin-nyan-message.is-error .admin-nyan-bubble { border-color: rgba(255, 156, 174, .5); }
+.admin-nyan-bubble a { color: var(--admin-accent-light); text-underline-offset: 3px; }
+.admin-nyan-message.is-user .admin-nyan-bubble a { color: #56273f; }
+
+.admin-nyan-proposal { width: min(92%, 340px); display: grid; gap: 7px; margin-top: 8px; padding: 12px; border: 1px solid var(--admin-border-strong); border-radius: 12px; background: rgba(239, 173, 208, .06); }
+.admin-nyan-proposal > span { color: var(--admin-accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.admin-nyan-proposal strong { font-size: 12px; }
+.admin-nyan-proposal small { color: var(--admin-muted); font-size: 10px; }
+.admin-nyan-proposal > div { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 3px; }
+.admin-nyan-state { margin: 5px 4px 0; color: var(--admin-muted); font-size: 10px; }
+.admin-nyan-state.is-success { color: var(--admin-success); }
+
+.admin-nyan-thinking { display: flex; align-items: center; gap: 5px; color: var(--admin-muted); font-size: 11px; }
+.admin-nyan-thinking span { width: 6px; height: 6px; border-radius: 50%; background: var(--admin-accent); animation: adminNyanDot .9s ease-in-out infinite alternate; }
+.admin-nyan-thinking span:nth-child(2) { animation-delay: .16s; }
+.admin-nyan-thinking span:nth-child(3) { animation-delay: .32s; }
+.admin-nyan-thinking em { margin-left: 4px; font-style: normal; }
+
+.admin-nyan-suggestions { display: flex; gap: 7px; overflow-x: auto; padding: 0 12px 10px; scrollbar-width: none; }
+.admin-nyan-suggestions::-webkit-scrollbar { display: none; }
+.admin-nyan-suggestions button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--admin-border); border-radius: 999px; color: var(--admin-muted-strong); background: transparent; font-size: 10px; }
+.admin-nyan-suggestions button:hover { border-color: var(--admin-accent-deep); color: var(--admin-text); }
+
+.admin-nyan-composer { display: grid; grid-template-columns: 1fr 42px; align-items: end; gap: 8px; margin: 0 12px 12px; padding: 7px; border: 1px solid var(--admin-border-strong); border-radius: 14px; background: var(--admin-panel-deep); }
+.admin-nyan-composer:focus-within { border-color: var(--admin-accent); box-shadow: 0 0 0 3px rgba(239, 173, 208, .08); }
+.admin-nyan-composer textarea { max-height: 110px; resize: none; padding: 9px; border: 0; outline: 0; color: var(--admin-text); background: transparent; font-size: 13px; }
+.admin-nyan-composer textarea::placeholder { color: var(--admin-muted); }
+.admin-nyan-composer button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 11px; color: #2a1421; background: var(--admin-accent); }
+.admin-nyan-composer button:hover:not(:disabled) { background: var(--admin-accent-light); transform: translateY(-1px); }
+.admin-nyan-composer button svg { width: 19px; }
+
+.admin-nyan-launcher-wrap { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+.admin-nyan-launcher-wrap > span { padding: 7px 10px; border: 1px solid var(--admin-border); border-radius: 999px; color: var(--admin-muted-strong); background: rgba(15, 12, 16, .9); font-size: 11px; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); transition: opacity .2s ease, transform .2s ease; }
+.admin-nyan.is-open .admin-nyan-launcher-wrap > span { opacity: 0; transform: translateX(8px); pointer-events: none; }
+.admin-nyan-launcher { position: relative; width: 60px; height: 60px; overflow: hidden; padding: 0; border: 1px solid var(--admin-border-strong); border-radius: 50%; background: #080709; box-shadow: 0 15px 40px rgba(0, 0, 0, .48), 0 0 0 6px rgba(239, 173, 208, .05); }
+.admin-nyan-launcher-orb { width: 100%; height: 100%; transition: opacity .2s ease, transform .3s ease; }
+.admin-nyan-launcher-close { position: absolute; inset: 0; display: grid; place-items: center; color: var(--admin-text); opacity: 0; transform: rotate(-35deg) scale(.7); transition: opacity .2s ease, transform .3s ease; }
+.admin-nyan-launcher-close svg { width: 23px; }
+.admin-nyan.is-open .admin-nyan-launcher-orb { opacity: .18; transform: scale(.8); }
+.admin-nyan.is-open .admin-nyan-launcher-close { opacity: 1; transform: none; }
+
+@keyframes adminNyanDot { to { opacity: .25; transform: translateY(-3px); } }
+
+@media (max-width: 620px) {
+  .admin-nyan { right: 12px; bottom: 12px; }
+  .admin-nyan-panel { right: -4px; bottom: 68px; width: calc(100vw - 16px); height: min(680px, calc(100dvh - 92px)); }
+  .admin-nyan-launcher-wrap > span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-nyan-panel,
+  .admin-nyan-launcher-orb,
+  .admin-nyan-launcher-close { transition-duration: .01ms; }
+  .admin-nyan-thinking span { animation: none; }
+}
