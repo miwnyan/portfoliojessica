@@ -74,6 +74,12 @@ def main() -> None:
         page.screenshot(path=str(ARTIFACTS / "certificate-modal.png"), full_page=False)
         page.locator("#skill-modal-close").click()
 
+        page.locator('#skills-grid [data-skill-id="cisco-ccst"]').click()
+        page.locator("#skill-dialog[open]").wait_for(state="visible")
+        assert page.locator("#skill-modal-certificate").is_visible()
+        assert "cisco-ccst-cybersecurity" in page.locator("#skill-modal-certificate").get_attribute("src")
+        page.locator("#skill-modal-close").click()
+
         page.locator("#projects-grid .circular-carousel").focus()
         page.keyboard.press("Enter")
         page.locator("#project-dialog[open]").wait_for(state="visible")

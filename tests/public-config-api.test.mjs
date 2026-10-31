@@ -18,6 +18,8 @@ handler({ method: 'GET' }, response);
 
 assert.equal(response.statusCode, 200);
 assert.equal(response.payload.cloudinary.configured, true);
+assert.equal(response.payload.cloudinary.unsignedAvailable, true);
+assert.equal(response.payload.cloudinary.signedAvailable, false);
 assert.equal(response.payload.cloudinary.cloudName, 'portfolio-cloud');
 assert.equal(response.payload.cloudinary.uploadPreset, 'portfolio-unsigned');
 assert.equal(response.headers['Cache-Control'], 'no-store, max-age=0');

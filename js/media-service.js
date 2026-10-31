@@ -110,21 +110,21 @@ function normalizeOptions(options) {
   return options && typeof options === 'object' ? options : {};
 }
 
-function cloudinaryError(response, status) {
-  const message = response?.error?.message || response?.message;
+function cloudinaryError(response, status, headerMessage = '') {
+  const message = response?.error?.message || response?.message || headerMessage;
   return new MediaUploadError(
     message ? `Cloudinary recusou o envio: ${message}` : 'Não foi possível enviar a imagem ao Cloudinary.',
     status === 413 ? 'media/file-too-large' : 'media/cloudinary-error',
-    { status }
+    { status, providerMessage: String(message || '') }
   );
 }
 
-const validCloudinaryConfig = config => /^[a-zA-Z0-9_-]+$/.test(config.cloudName)
+const validUnsignedConfig = config => /^[a-zA-Z0-9_-]+$/.test(config.cloudName)
   && /^[a-zA-Z0-9_-]+$/.test(config.uploadPreset);
 
 async function resolveCloudinaryConfig() {
   const buildConfig = { cloudName: buildCloudName, uploadPreset: buildUploadPreset };
-  if (validCloudinaryConfig(buildConfig)) return buildConfig;
+  if (validUnsignedConfig(buildConfig)) return buildConfig;
 
   runtimeConfigPromise ??= fetch('/api/public-config', {
     method: 'GET',
@@ -143,9 +143,57 @@ async function resolveCloudinaryConfig() {
   return runtimeConfigPromise;
 }
 
+async function requestSignedUpload(options, metadata) {
+  const authToken = String(options.authToken || '').trim();
+  if (!authToken) return null;
+
+  let response;
+  try {
+    response = await fetch('/api/cloudinary-signature', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      cache: 'no-store',
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        folder: metadata.folder,
+        publicId: metadata.publicId,
+        tags: metadata.tags
+      })
+    });
+  } catch {
+    return null;
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  if ([404, 405, 503].includes(response.status) && payload.signedAvailable !== true) return null;
+  if (!response.ok) {
+    throw new MediaUploadError(
+      payload.error || 'Não foi possível autorizar o upload da imagem.',
+      response.status === 401 || response.status === 403 ? 'media/not-authorized' : 'media/signature-failed',
+      { status: response.status }
+    );
+  }
+
+  const cloudName = String(payload.cloudName || '').trim();
+  const apiKey = String(payload.apiKey || '').trim();
+  const signature = String(payload.signature || '').trim();
+  const parameters = payload.parameters && typeof payload.parameters === 'object'
+    ? payload.parameters
+    : {};
+  if (!/^[a-zA-Z0-9_-]+$/.test(cloudName) || !apiKey || !/^[a-f0-9]{40}$/i.test(signature) || !parameters.timestamp) {
+    throw new MediaUploadError('O servidor retornou uma autorização de upload inválida.', 'media/invalid-signature');
+  }
+  return { cloudName, apiKey, signature, parameters };
+}
+
 /**
- * Upload unsigned e direto para o Cloudinary. Nenhum segredo ou API key é
- * enviado pelo navegador; o preset deve restringir pasta, formatos e tamanho.
+ * Envia diretamente ao Cloudinary. Quando o servidor possui credenciais
+ * privadas, usa uma assinatura temporária emitida apenas para a conta admin;
+ * caso contrário, usa o preset unsigned público configurado.
  */
 export async function uploadMedia(file, rawOptions = {}) {
   const options = normalizeOptions(rawOptions);
@@ -154,15 +202,35 @@ export async function uploadMedia(file, rawOptions = {}) {
   if (!validation.valid) {
     throw new MediaUploadError(validation.error, validation.code, validation);
   }
-  const { cloudName, uploadPreset } = await resolveCloudinaryConfig();
-  if (!validCloudinaryConfig({ cloudName, uploadPreset })) {
-    throw new MediaUploadError(
-      'O upload de imagens está indisponível. Confirme o Cloud name e o preset unsigned no ambiente da publicação.',
-      'media/not-configured'
-    );
-  }
   if (options.signal?.aborted) {
     throw new MediaUploadError('Envio cancelado.', 'media/aborted');
+  }
+
+  const metadata = {
+    folder: safeFolder(options.folder),
+    publicId: options.publicId
+      ? String(options.publicId).replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 120)
+      : '',
+    tags: Array.isArray(options.tags)
+      ? options.tags
+        .map(tag => String(tag).replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 40))
+        .filter(Boolean)
+        .slice(0, 20)
+      : []
+  };
+  const signedUpload = await requestSignedUpload(options, metadata);
+  let cloudName = signedUpload?.cloudName || '';
+  let uploadPreset = '';
+  if (!signedUpload) {
+    const unsignedConfig = await resolveCloudinaryConfig();
+    cloudName = unsignedConfig.cloudName;
+    uploadPreset = unsignedConfig.uploadPreset;
+    if (!validUnsignedConfig(unsignedConfig)) {
+      throw new MediaUploadError(
+        'O upload de imagens está indisponível. Configure credenciais assinadas ou um preset unsigned no ambiente da publicação.',
+        'media/not-configured'
+      );
+    }
   }
 
   return new Promise((resolve, reject) => {
@@ -182,17 +250,17 @@ export async function uploadMedia(file, rawOptions = {}) {
     const abortUpload = () => request.abort();
 
     formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
-    formData.append('folder', safeFolder(options.folder));
-    if (options.publicId) {
-      formData.append('public_id', String(options.publicId).replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 120));
-    }
-    if (Array.isArray(options.tags) && options.tags.length) {
-      const tags = options.tags
-        .map(tag => String(tag).replace(/[^a-zA-Z0-9_-]+/g, '-').slice(0, 40))
-        .filter(Boolean)
-        .slice(0, 20);
-      if (tags.length) formData.append('tags', tags.join(','));
+    if (signedUpload) {
+      Object.entries(signedUpload.parameters).forEach(([key, value]) => {
+        if (value !== '' && value !== undefined && value !== null) formData.append(key, String(value));
+      });
+      formData.append('api_key', signedUpload.apiKey);
+      formData.append('signature', signedUpload.signature);
+    } else {
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', metadata.folder);
+      if (metadata.publicId) formData.append('public_id', metadata.publicId);
+      if (metadata.tags.length) formData.append('tags', metadata.tags.join(','));
     }
 
     request.open('POST', endpoint, true);
@@ -208,7 +276,7 @@ export async function uploadMedia(file, rawOptions = {}) {
     request.addEventListener('load', () => {
       const response = request.response;
       if (request.status < 200 || request.status >= 300 || !response?.secure_url) {
-        fail(cloudinaryError(response, request.status));
+        fail(cloudinaryError(response, request.status, request.getResponseHeader('X-Cld-Error')));
         return;
       }
       if (typeof options.onProgress === 'function') {

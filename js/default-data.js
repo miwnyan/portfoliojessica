@@ -65,6 +65,9 @@ export const ICON_CATALOG = deepFreeze([
   icon('flutter', 'Flutter', 'web-frameworks', devicon('flutter'), 360),
   icon('tailwindcss', 'Tailwind CSS', 'web-frameworks', devicon('tailwindcss'), 370, ['tailwind']),
   icon('bootstrap', 'Bootstrap', 'web-frameworks', devicon('bootstrap'), 380),
+  icon('vitejs', 'Vite', 'web-frameworks', devicon('vitejs'), 385, ['frontend', 'build']),
+  icon('electron', 'Electron', 'web-frameworks', devicon('electron'), 390, ['desktop', 'javascript']),
+  icon('wordpress', 'WordPress', 'web-frameworks', devicon('wordpress'), 395, ['cms', 'web']),
 
   icon('sqlite', 'SQLite', 'databases', localIcon('sqlite.svg'), 410, ['sql']),
   icon('postgresql', 'PostgreSQL', 'databases', devicon('postgresql'), 420, ['postgres', 'sql']),
@@ -92,6 +95,10 @@ export const ICON_CATALOG = deepFreeze([
   icon('linux', 'Linux', 'security-networks', devicon('linux'), 640, ['operating system']),
   icon('kali', 'Kali Linux', 'security-networks', devicon('kalilinux'), 650, ['pentest', 'security']),
   icon('windows', 'Windows', 'security-networks', localIcon('microsoft.svg'), 660, ['microsoft', 'operating system']),
+  icon('wireshark', 'Wireshark', 'security-networks', devicon('wireshark'), 670, ['pacotes', 'rede', 'análise']),
+  icon('router', 'Roteadores', 'security-networks', iconify('router'), 680, ['rede', 'network']),
+  icon('firewall', 'Firewall', 'security-networks', iconify('shield-check'), 690, ['segurança', 'security']),
+  icon('server', 'Servidores', 'security-networks', iconify('server'), 700, ['infraestrutura', 'rede']),
 
   icon('github', 'GitHub', 'tools', localIcon('github.svg'), 710, ['git', 'repository']),
   icon('git', 'Git', 'tools', devicon('git'), 720, ['version control']),
@@ -103,6 +110,9 @@ export const ICON_CATALOG = deepFreeze([
   icon('npm', 'npm', 'tools', devicon('npm'), 780, ['package manager']),
   icon('pnpm', 'pnpm', 'tools', devicon('pnpm'), 790, ['package manager']),
   icon('yarn', 'Yarn', 'tools', devicon('yarn'), 800, ['package manager']),
+  icon('gitlab', 'GitLab', 'tools', devicon('gitlab'), 802, ['git', 'repository', 'ci']),
+  icon('jira', 'Jira', 'tools', devicon('jira'), 804, ['projetos', 'agile']),
+  icon('canva', 'Canva', 'tools', devicon('canva'), 806, ['design', 'conteúdo']),
 
   icon('powerbi', 'Power BI', 'data-ai', localIcon('powerbi.svg'), 810, ['dados', 'dashboard']),
   icon('pandas', 'Pandas', 'data-ai', devicon('pandas'), 820, ['python', 'data']),
@@ -110,6 +120,10 @@ export const ICON_CATALOG = deepFreeze([
   icon('jupyter', 'Jupyter', 'data-ai', devicon('jupyter'), 840, ['notebook', 'python']),
   icon('tensorflow', 'TensorFlow', 'data-ai', devicon('tensorflow'), 850, ['machine learning', 'ai']),
   icon('pytorch', 'PyTorch', 'data-ai', devicon('pytorch'), 860, ['machine learning', 'ai']),
+  icon('scikitlearn', 'Scikit-learn', 'data-ai', devicon('scikitlearn'), 870, ['machine learning', 'python']),
+  icon('matplotlib', 'Matplotlib', 'data-ai', devicon('matplotlib'), 880, ['gráficos', 'python']),
+  icon('anaconda', 'Anaconda', 'data-ai', devicon('anaconda'), 890, ['python', 'dados']),
+  icon('grafana', 'Grafana', 'data-ai', devicon('grafana'), 900, ['monitoramento', 'dashboard']),
 
   icon('code', 'Código', 'generic', localIcon('code.svg'), 910, ['programação', 'development']),
   icon('microsoft', 'Microsoft', 'generic', localIcon('microsoft.svg'), 920),
@@ -122,6 +136,22 @@ export const ICON_CATALOG = deepFreeze([
   icon('github-contact', 'GitHub (contato)', 'contacts', localIcon('github.svg'), 1010, ['social']),
   icon('linkedin', 'LinkedIn', 'contacts', devicon('linkedin'), 1020, ['social']),
   icon('mail', 'Mensagem / e-mail', 'contacts', iconify('mail'), 1030, ['contact', 'email'])
+]);
+
+/**
+ * Arquivos locais prontos para reutilização no painel, sem novo upload.
+ * O tipo permite limitar as escolhas ao campo em edição.
+ */
+export const PRESET_MEDIA_LIBRARY = deepFreeze([
+  { id: 'lastro-cover', label: 'Capa Lastro', url: '/assets/projects/lastro-preview.png', kind: 'project-cover' },
+  { id: 'nexo-cover', label: 'Capa Nexo', url: '/assets/projects/nexo-preview.png', kind: 'project-cover' },
+  { id: 'cirro-cover', label: 'Capa Cirro', url: '/assets/projects/cirro-preview.png', kind: 'project-cover' },
+  { id: 'prumo-cover', label: 'Capa Prumo', url: '/assets/projects/prumo-preview.png', kind: 'project-cover' },
+  { id: 'cafeteria-cover', label: 'Capa SistemaCafeteria', url: '/assets/project-cover-cafeteria.png', kind: 'project-cover' },
+  { id: 'sysdaisy-cover', label: 'Capa SysDaisyOptimizer', url: '/assets/project-cover-sysdaisy.png', kind: 'project-cover' },
+  { id: 'bunny-static', label: 'Coelhinho estático', url: '/assets/coelhinho-estatico.png', kind: 'site-image' },
+  { id: 'bunny-animated', label: 'Coelhinho animado', url: '/assets/coelhinho.gif', kind: 'site-image' },
+  { id: 'portfolio-favicon', label: 'Favicon do portfólio', url: '/assets/favicon.svg', kind: 'site-image' }
 ]);
 
 export const DEFAULT_PORTFOLIO = deepFreeze({
@@ -443,6 +473,7 @@ export const DEFAULT_PORTFOLIO = deepFreeze({
     {
       id: 'cisco-ccst', folderId: 'cloud-security', order: 0, visible: true,
       name: 'Cisco CCST', title: 'Cisco Certified Support Technician (CCST) Cybersecurity', badge: '', status: 'Certificação internacional', iconId: 'cisco', iconUrl: '/assets/icons/cisco.svg',
+      certificateUrl: '/assets/certificates/cisco-ccst-cybersecurity.png',
       description: 'Certificação Cisco voltada aos fundamentos técnicos e operacionais de cibersegurança.',
       details: ['Emissora: Cisco.', 'Princípios de segurança, ameaças e vulnerabilidades.', 'Controles de acesso, proteção de redes e resposta a incidentes.']
     },

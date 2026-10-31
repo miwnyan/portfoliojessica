@@ -103,16 +103,14 @@ No primeiro acesso autorizado, o painel pode inicializar `portfolio/public` com 
 
 O nome correto do serviço usado para mídia é **Cloudinary**.
 
-1. Crie uma conta gratuita e copie o **Cloud name** para `VITE_CLOUDINARY_CLOUD_NAME` ou `CLOUDINARY_CLOUD_NAME`.
-2. Em **Settings → Upload → Upload presets**, crie um preset.
-3. Defina o modo de assinatura como **Unsigned**.
-4. Restrinja o preset a imagens, aos formatos realmente usados (`jpg`, `jpeg`, `png`, `webp`, `gif`, `ico` e, se necessário, `svg`) e a no máximo **10 MB**.
-5. Defina uma pasta exclusiva, por exemplo `portfolio-jessica`, mantenha nomes únicos e desative sobrescrita quando essa opção estiver disponível.
-6. Copie o nome do preset para `VITE_CLOUDINARY_UPLOAD_PRESET` ou `CLOUDINARY_UPLOAD_PRESET`.
+O painel aceita dois modos de configuração:
 
-O upload sai diretamente do navegador para o Cloudinary; o arquivo não atravessa a Vercel nem o Firebase. Isso permite GIFs maiores que o limite de payload de funções serverless, mas o plano gratuito do Cloudinary atualmente limita cada imagem a **10 MB**. `VITE_MAX_UPLOAD_MB=10` aplica a mesma validação na interface.
+1. **Upload assinado (recomendado):** configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET` na Vercel. Opcionalmente informe `CLOUDINARY_SIGNED_UPLOAD_PRESET`. O navegador pede uma assinatura temporária a `/api/cloudinary-signature`; a função valida o Firebase ID token e o registro ativo em `admins/{uid}` antes de assinar. O API Secret nunca é enviado ao navegador.
+2. **Upload unsigned:** configure `VITE_CLOUDINARY_CLOUD_NAME` e `VITE_CLOUDINARY_UPLOAD_PRESET` (ou os aliases sem `VITE_`). Em **Settings → Upload → Upload presets**, o preset precisa estar explicitamente no modo **Unsigned**. Restrinja formatos, tamanho e pasta, pois o nome desse preset é público.
 
-Um preset unsigned é necessariamente visível no código do navegador. Por isso, as restrições de formato, tamanho e pasta são obrigatórias. Monitore o uso da conta e troque/desative o preset se detectar uploads indevidos. Nunca adicione `CLOUDINARY_API_SECRET`, credenciais administrativas do Firebase ou outros segredos a uma variável iniciada por `VITE_`.
+Também é aceito `CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME` no servidor. Nos dois modos, o arquivo segue diretamente do navegador para o Cloudinary; a função serverless só emite a assinatura curta, sem receber o arquivo. `VITE_MAX_UPLOAD_MB=10` aplica a validação de tamanho na interface.
+
+Se o Cloudinary estiver preenchido na Vercel, mas o upload continuar indisponível, confira se as variáveis foram atribuídas ao ambiente correto (Production/Preview) e faça um novo deploy. Alterações de variáveis não modificam deployments já existentes. Nunca adicione `CLOUDINARY_API_SECRET`, credenciais administrativas do Firebase ou outros segredos a uma variável iniciada por `VITE_`.
 
 ## 3. Variáveis de ambiente
 
@@ -127,6 +125,10 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 VITE_CLOUDINARY_CLOUD_NAME=
 VITE_CLOUDINARY_UPLOAD_PRESET=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CLOUDINARY_SIGNED_UPLOAD_PRESET=
 VITE_MAX_UPLOAD_MB=10
 SMTP_HOST=mail.privateemail.com
 SMTP_PORT=465
@@ -141,7 +143,7 @@ GROQ_API_KEY=
 GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro as variáveis `VITE_CLOUDINARY_*` compiladas e, se necessário, consulta `/api/public-config` em runtime; os aliases `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_UPLOAD_PRESET` também são aceitos. Esses dois identificadores são públicos.
+Depois de alterar o `.env`, reinicie o servidor de desenvolvimento. O painel tenta primeiro o upload assinado e usa o preset unsigned como fallback. O `Cloud name` e o nome do preset unsigned são identificadores públicos; `CLOUDINARY_API_SECRET` permanece exclusivamente no servidor.
 
 O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` é a senha da caixa postal `contato@jessicamontes.space`, não a senha da conta Namecheap. Todas as variáveis `SMTP_*` são privadas, ficam somente no servidor e nunca devem receber o prefixo `VITE_`. O remetente autenticado permanece `SMTP_USER`; o e-mail informado pelo visitante é aplicado em `Reply-To`, permitindo responder diretamente.
 
@@ -150,8 +152,6 @@ O formulário usa o SMTP do Private Email como canal principal. `SMTP_PASSWORD` 
 ## Assistente virtual
 
 O botão animado no canto inferior direito abre a Nyan, assistente do portfólio. Ela mantém conversas neste dispositivo, permite marcar conversas importantes, oferece respostas locais para perguntas frequentes e usa a Groq somente quando precisa interpretar uma dúvida mais específica. O mesmo painel também envia mensagens pela rota `/api/contact`, tanto pelo formulário quanto por um fluxo guiado na própria conversa. Nome, e-mail e mensagem desse fluxo não são enviados à Groq nem persistidos no histórico local. URLs e e-mails apresentados nas respostas são transformados em links clicáveis.
-
-Depois que uma conta autorizada entra em `/admin`, uma segunda instância da Nyan é carregada exclusivamente no painel. Ela recebe o estado atual, pode montar propostas para criar ou editar experiências, projetos, habilidades, contatos e configurações, e importa projetos públicos do GitHub procurando uma imagem no próprio repositório. Toda proposta precisa ser confirmada antes de alterar o painel. A rota `/api/admin-chat` valida no servidor tanto o Firebase ID token quanto o registro ativo em `admins/{uid}`; o widget público não recebe credenciais nem acesso a essa rota.
 
 Para ativar as respostas por IA, crie uma chave no GroqCloud e configure no `.env`:
 
@@ -170,12 +170,12 @@ Sem `GROQ_API_KEY`, o widget e as respostas locais continuam disponíveis e dúv
 
 1. Envie o projeto para um repositório Git.
 2. Importe esse repositório na Vercel.
-3. Cadastre todas as variáveis de `.env.example` em **Project Settings → Environment Variables** para os ambientes desejados.
+3. Cadastre as variáveis necessárias de `.env.example` em **Project Settings → Environment Variables** para os ambientes desejados. Para mídia, prefira as credenciais privadas `CLOUDINARY_*` do modo assinado.
 4. A Vercel detectará o Vite. O projeto já fixa `npm run build` como comando e `dist` como diretório de saída.
 5. Faça o deploy e teste a página inicial e `/admin` diretamente pela URL publicada.
 6. Adicione o domínio final em **Firebase Authentication → Settings → Authorized domains**.
 
-O [vercel.json](vercel.json) preserva a rota limpa `/admin` e adiciona cabeçalhos básicos de segurança. Cada alteração de uma variável `VITE_*` exige um novo deploy, pois o valor é incorporado no build.
+O [vercel.json](vercel.json) preserva a rota limpa `/admin` e adiciona cabeçalhos básicos de segurança. Faça um novo deploy depois de alterar qualquer variável: valores `VITE_*` são incorporados no build e variáveis de funções também só passam a valer em um deployment novo.
 
 O formulário de contato e o assistente dependem das funções serverless `/api/contact` e `/api/chat` e, portanto, precisam da publicação pela Vercel (ou de funções equivalentes em outro provedor). Cadastre `SMTP_PASSWORD` e `GROQ_API_KEY` como valores sensíveis e faça um novo deploy sempre que adicionar ou alterar qualquer variável. O envio SMTP é aguardado pela função antes da resposta de sucesso.
 

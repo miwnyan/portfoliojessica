@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { normalizePortfolio } from '../js/data-service.js';
+import { DEFAULT_PORTFOLIO, ICON_CATALOG, PRESET_MEDIA_LIBRARY } from '../js/default-data.js';
 
 const projects = Array.from({ length: 105 }, (_, index) => ({
   id: `project-${index}`,
@@ -50,5 +51,17 @@ assert.equal(pinnedPreviewById.get('prumo'), '/assets/projects/prumo-preview.png
 assert.equal(pinnedPreviewById.get('lastro'), '/assets/projects/lastro-preview.png');
 assert.equal(pinnedPreviewById.get('cirro'), '/assets/projects/cirro-preview.png');
 assert.equal(pinnedPreviewById.get('nexo'), '/assets/projects/nexo-preview.png');
+
+const cisco = DEFAULT_PORTFOLIO.skills.find(skill => skill.id === 'cisco-ccst');
+assert.equal(cisco.certificateUrl, '/assets/certificates/cisco-ccst-cybersecurity.png');
+const migratedCisco = normalizePortfolio({
+  skills: [{ id: 'cisco-ccst', folderId: 'cloud-security', name: 'Cisco CCST' }]
+}).skills.find(skill => skill.id === 'cisco-ccst');
+assert.equal(migratedCisco.certificateUrl, '/assets/certificates/cisco-ccst-cybersecurity.png');
+for (const iconId of ['vitejs', 'wireshark', 'router', 'gitlab', 'canva', 'scikitlearn', 'grafana']) {
+  assert.ok(ICON_CATALOG.some(icon => icon.id === iconId), `Ícone ausente: ${iconId}`);
+}
+assert.ok(PRESET_MEDIA_LIBRARY.length >= 9);
+assert.ok(PRESET_MEDIA_LIBRARY.filter(item => item.kind === 'project-cover').length >= 6);
 
 console.log('Data service tests passed');

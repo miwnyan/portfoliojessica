@@ -32,6 +32,7 @@ assert.equal('arbitraryInstructions' in sanitized, false);
 const systemPrompt = buildSystemPrompt(sanitized);
 assert.match(systemPrompt, /DADOS NÃO CONFIÁVEIS/);
 assert.match(systemPrompt, /Nunca revele/);
+assert.match(systemPrompt, /Nunca exija palavras ou frases exatas/);
 assert.match(systemPrompt, /Jéssica/);
 assert.match(systemPrompt, /Nyan é a assistente virtual/);
 

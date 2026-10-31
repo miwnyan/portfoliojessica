@@ -39,6 +39,15 @@ function makeThread() {
   };
 }
 
+function displayMessageContent(message) {
+  const content = String(message?.content || '');
+  return message?.role === 'assistant' ? content.replace(/\bLumi\b/g, 'Nyan') : content;
+}
+
+function isWelcomeMessage(message) {
+  return message?.role === 'assistant' && /^Oi! Eu sou a (?:Nyan|Lumi)\./.test(String(message.content || ''));
+}
+
 function safeStoredThreads() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -84,7 +93,8 @@ export function createPortfolioContext(data = {}) {
       name: hero.name || settings.footer?.name || 'Jéssica Montes Santos',
       headline: hero.subtitle || '',
       description: hero.description || '',
-      about: Array.isArray(about.paragraphs) ? about.paragraphs : []
+      about: Array.isArray(about.paragraphs) ? about.paragraphs : [],
+      contactEmail: settings.contact?.destinationEmail || ''
     },
     projects: visible(data.projects).map(project => ({
       name: project.name || '',
@@ -116,15 +126,18 @@ function normalizeText(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-function wantsConversationalContact(value) {
+export function wantsConversationalContact(value) {
   const text = normalizeText(value);
-  return EMAIL_PATTERN.test(value)
-    || /\b(?:quero|gostaria|preciso|posso|vou)\b.{0,42}\b(?:falar|conversar|mandar|enviar|escrever|contatar|contratar)\b/.test(text)
-    || /\b(?:quero|gostaria|preciso|tenho interesse)\b.{0,42}\b(?:orcamento|proposta|contratacao)\b/.test(text)
-    || /\b(?:mandar|enviar)\s+(?:uma\s+)?mensagem\b/.test(text);
+  const hasAction = /\b(?:envi\w*|mand\w*|diz(?:er)?|diga|fal(?:ar|a|e|ando)|avis\w*|encaminh\w*|escrev\w*|contat\w*|contrat\w*|deix\w*)\b/.test(text);
+  if (EMAIL_PATTERN.test(value)) return true;
+  if (/^(?:mensagem|msg|recado)\s*[:=-]/.test(text)) return true;
+  if (/\b(?:quero|queria|gostaria|preciso|posso|poderia|vou|desejo|tento|ajud[ae])\b/.test(text) && hasAction) return true;
+  if (hasAction && /\b(?:mensagem|msg|recado|jessica|ela|pra ela|para ela)\b/.test(text)) return true;
+  if (/\b(?:mensagem|msg|recado)\b.{0,45}\b(?:jessica|ela|enviar|mandar|mande|envie)\b/.test(text)) return true;
+  return /\b(?:quero|gostaria|preciso|tenho interesse)\b.{0,55}\b(?:orcamento|proposta|contratacao)\b/.test(text);
 }
 
-function extractContactDetails(value, current = {}, expectedStep = '') {
+export function extractContactDetails(value, current = {}, expectedStep = '') {
   const raw = String(value || '').trim();
   const next = { name: current.name || '', email: current.email || '', message: current.message || '' };
   const email = raw.match(EMAIL_PATTERN)?.[0];
@@ -133,9 +146,19 @@ function extractContactDetails(value, current = {}, expectedStep = '') {
   const named = raw.match(/\b(?:meu\s+nome\s+(?:é|eh|e)|me\s+chamo)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,80}?)(?=\s+(?:e\s+)?(?:(?:o|a)\s+)?(?:(?:meu|minha)\s+)?(?:e-?mail|email|mensagem)\b|[,.;\n]|$)/i);
   if (named?.[1]) next.name = named[1].trim();
 
-  const explicitMessage = raw.match(/\b(?:a\s+)?mensagem(?:\s+que\s+(?:eu\s+)?quero\s+enviar)?\s*(?:é|eh|:)\s*["']?(.+?)["']?$/i)
-    || raw.match(/\bmensagem\s+(?:dizendo|falando)\s+["']?(.+?)["']?$/i);
-  if (explicitMessage?.[1]) next.message = explicitMessage[1].trim();
+  const explicitMessage = raw.match(/\b(?:a\s+)?(?:mensagem|msg|recado)(?:\s+que\s+(?:eu\s+)?quero\s+enviar)?\s*(?:é|eh|e|:|=|-)\s*["']?(.+?)["']?$/i)
+    || raw.match(/\b(?:mensagem|msg|recado)\s+(?:dizendo|falando)\s+(?:que\s+)?["']?(.+?)["']?$/i)
+    || raw.match(/\b(?:diga|dizer|fale|fala|falar|avise|avisa|avisar|encaminhe|encaminha)\s+(?:(?:para|pra)\s+)?(?:a\s+)?(?:jéssica|jessica|ela)\s+(?:que|q)?\s*["']?(.+?)["']?$/i)
+    || raw.match(/\b(?:quero\s+|queria\s+|gostaria\s+de\s+|vou\s+|pode\s+|poderia\s+|por\s+favor\s+)?(?:enviar|envie|envia|mandar|mande|manda|encaminhar|encaminhe|encaminha)\s+(?:(?:uma|a|um)\s+)?(?:(?:mensagem|msg|recado)\s+)?(?:(?:para|pra)\s+(?:(?:a|à)\s+)?(?:jéssica|jessica|ela)(?:\s+(?:no|pelo)\s+e-?mail\s+dela)?\s*[,;:-]?\s*)?(?:dizendo|falando)?\s*(?:que|q)?\s*["']?(.+?)["']?$/i);
+  if (explicitMessage?.[1]) {
+    const candidate = explicitMessage[1]
+      .trim()
+      .replace(/\s+(?:para|pra)\s+(?:(?:a|à)\s+)?(?:jéssica|jessica|ela)\s*$/i, '')
+      .replace(/^[,;:\s-]+|[,;\s]+$/g, '');
+    if (candidate && !/^(?:uma\s+)?(?:mensagem|msg|recado)(?:\s+(?:para|pra)\s+(?:a\s+)?(?:jéssica|jessica|ela))?$/i.test(candidate)) {
+      next.message = candidate.slice(0, 3000);
+    }
+  }
 
   const about = raw.match(/\b(?:quero|gostaria|preciso)\s+(?:falar|conversar)\s+(?:com\s+(?:ela|a\s+jéssica)\s+)?(?:sobre|a\s+respeito\s+de)\s+(.+)$/i);
   if (!next.message && about?.[1]) next.message = `Gostaria de conversar sobre ${about[1].trim()}`;
@@ -145,6 +168,37 @@ function extractContactDetails(value, current = {}, expectedStep = '') {
     next.name = raw.replace(/^(?:meu\s+nome\s+(?:é|eh|e)|me\s+chamo)\s+/i, '').trim().slice(0, 100);
   }
   return next;
+}
+
+function oneEditAway(left, right) {
+  if (left === right) return true;
+  if (Math.abs(left.length - right.length) > 1) return false;
+  let first = left;
+  let second = right;
+  if (first.length > second.length) [first, second] = [second, first];
+  let changes = 0;
+  for (let shortIndex = 0, longIndex = 0; longIndex < second.length; shortIndex++, longIndex++) {
+    if (first[shortIndex] === second[longIndex]) continue;
+    changes += 1;
+    if (changes > 1) return false;
+    if (first.length !== second.length) shortIndex -= 1;
+  }
+  return true;
+}
+
+function hasIntentWord(text, words) {
+  const tokens = text.match(/[a-z0-9]+/g) || [];
+  return words.some(word => text.includes(word) || (
+    word.length >= 5 && tokens.some(token => token.length >= 4 && oneEditAway(token, word))
+  ));
+}
+
+function mentionsNamedItem(text, name) {
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) return false;
+  if (text.includes(normalizedName)) return true;
+  const meaningful = normalizedName.match(/[a-z0-9]+/g)?.filter(token => token.length >= 4) || [];
+  return meaningful.some(token => hasIntentWord(text, [token]));
 }
 
 function nextContactStep(draft) {
@@ -172,7 +226,7 @@ function isNegative(value) {
   return /^(?:não|nao|cancela|cancelar|desiste|desistir)(?:[\s,.!]|$)/i.test(String(value || '').trim());
 }
 
-function localAnswer(input, context) {
+export function localAnswer(input, context) {
   const text = normalizeText(input);
   const profile = context.profile || {};
   const projects = context.projects || [];
@@ -188,19 +242,24 @@ function localAnswer(input, context) {
   if (/\b(obrigad[oa]|valeu|agradeco)\b/.test(text)) {
     return { answer: 'Por nada! Se surgir outra dúvida, é só me chamar.', source: 'local' };
   }
-  if (/\b(?:linkedin|linked in|linkdin|likedin)\b/.test(text)) {
+  if (hasIntentWord(text, ['linkedin', 'linkdin', 'likedin'])) {
     const contact = (context.contacts || []).find(item => normalizeText(item.label).includes('linkedin'));
     return contact?.url
       ? { answer: `LinkedIn da Jéssica: ${contact.url}`, source: 'local' }
       : { answer: FALLBACK, source: 'local', offerContact: true };
   }
-  if (/\b(?:github|git hub)\b/.test(text) && !/\bprojeto\b/.test(text)) {
+  if (hasIntentWord(text, ['github']) && !hasIntentWord(text, ['projeto'])) {
     const contact = (context.contacts || []).find(item => normalizeText(item.label).includes('github'));
     return contact?.url
       ? { answer: `GitHub da Jéssica: ${contact.url}`, source: 'local' }
       : { answer: FALLBACK, source: 'local', offerContact: true };
   }
-  if (/\b(contato|falar com|mensagem|email|e-mail|contratar)\b/.test(text)) {
+  if (hasIntentWord(text, ['email', 'e-mail']) && /\b(?:qual|onde|como|mostra|passe|tem)\b/.test(text)) {
+    const emailContact = (context.contacts || []).find(item => /^mailto:/i.test(item.url) || normalizeText(item.label).includes('email'));
+    const email = String(emailContact?.url || profile.contactEmail || '').replace(/^mailto:/i, '');
+    if (EMAIL_PATTERN.test(email)) return { answer: `E-mail de contato da Jéssica: ${email}`, source: 'local' };
+  }
+  if (hasIntentWord(text, ['contato', 'mensagem', 'email', 'contratar', 'falar'])) {
     return { answer: 'Você pode tocar em “Enviar mensagem” para abrir o formulário ou me dizer diretamente por aqui o que deseja enviar. Eu vou pedir somente a mensagem, seu e-mail e seu nome.', source: 'local', offerContact: true };
   }
   if (/\b(quem e|sobre (ela|a jessica)|apresente|perfil)\b/.test(text)) {
@@ -209,15 +268,33 @@ function localAnswer(input, context) {
       ? { answer: about.slice(0, 700), source: 'local' }
       : { answer: FALLBACK, source: 'local', offerContact: true };
   }
-  if (/\b(projetos?|portfolio|trabalhos?)\b/.test(text) && (/\b(quais|listar|mostre|ver|tem|principais)\b/.test(text) || text.split(' ').length <= 2)) {
+  const namedProject = projects.find(project => mentionsNamedItem(text, project.name));
+  if (namedProject) {
+    const description = namedProject.description || namedProject.summary || `${namedProject.name} é um projeto apresentado no portfólio.`;
+    const technologies = namedProject.technologies?.length ? ` Tecnologias: ${new Intl.ListFormat('pt-BR').format(namedProject.technologies)}.` : '';
+    const links = [namedProject.homepageUrl && `Publicado em ${namedProject.homepageUrl}`, namedProject.repositoryUrl && `Repositório: ${namedProject.repositoryUrl}`].filter(Boolean).join(' ');
+    return { answer: `${description}${technologies}${links ? ` ${links}` : ''}`.slice(0, 900), source: 'local' };
+  }
+  if (hasIntentWord(text, ['projeto', 'portfolio', 'trabalho']) && (/\b(quais|listar|lista|mostre|mostrar|ver|tem|principais|conhecer)\b/.test(text) || text.split(' ').length <= 4)) {
     if (!projects.length) return { answer: FALLBACK, source: 'local', offerContact: true };
     const names = projects.slice(0, 6).map(project => project.name).filter(Boolean);
     return { answer: `Os projetos em destaque são ${new Intl.ListFormat('pt-BR').format(names)}. Posso explicar qualquer um deles em mais detalhes.`, source: 'local' };
   }
-  if (/\b(habilidades?|tecnologias?|stack|competencias?)\b/.test(text) && (/\b(quais|listar|mostre|tem|principais)\b/.test(text) || text.split(' ').length <= 2)) {
+  const namedSkill = skills.find(skill => mentionsNamedItem(text, skill.name));
+  if (namedSkill && text.split(' ').length > 1) {
+    const details = [namedSkill.description, namedSkill.status].filter(Boolean).join(' ');
+    return { answer: details || `${namedSkill.name} aparece entre as habilidades da Jéssica.`, source: 'local' };
+  }
+  if ((hasIntentWord(text, ['habilidade', 'tecnologia', 'stack', 'competencia']) || /\b(?:o?q|que)\s+(?:ela\s+)?(?:sabe|domina|faz)\b/.test(text)) && (/\b(quais|listar|lista|mostre|mostrar|tem|principais|sabe|domina|faz)\b/.test(text) || text.split(' ').length <= 5)) {
     if (!skills.length) return { answer: FALLBACK, source: 'local', offerContact: true };
     const names = skills.slice(0, 10).map(skill => skill.name).filter(Boolean);
     return { answer: `Entre as habilidades apresentadas estão ${new Intl.ListFormat('pt-BR').format(names)}. Posso detalhar uma tecnologia específica.`, source: 'local' };
+  }
+  if (hasIntentWord(text, ['experiencia', 'trajetoria', 'curriculo']) || /\b(?:onde|com\s+que)\s+(?:ela\s+)?(?:trabalhou|trabalha)\b/.test(text)) {
+    const experiences = context.experience || [];
+    if (!experiences.length) return { answer: FALLBACK, source: 'local', offerContact: true };
+    const entries = experiences.slice(0, 6).map(item => [item.title, item.institution, item.period].filter(Boolean).join(' — '));
+    return { answer: `A experiência apresentada inclui ${entries.join('; ')}. Posso detalhar uma delas.`, source: 'local' };
   }
   return null;
 }
@@ -511,9 +588,9 @@ function Chatbot({ getPortfolioData }) {
     if (!message || sending) return;
     const portfolioContext = createPortfolioContext(getPortfolioData());
     const history = activeThread.messages
-      .filter(item => item.content !== WELCOME && !item.private)
+      .filter(item => !isWelcomeMessage(item) && !item.private)
       .slice(-10)
-      .map(item => ({ role: item.role, content: item.content }));
+      .map(item => ({ role: item.role, content: displayMessageContent(item) }));
     const existingDraft = contactDraft?.threadId === activeId ? contactDraft : null;
     const contactIntent = Boolean(existingDraft) || wantsConversationalContact(message);
     appendMessage('user', message, contactIntent ? { private: true } : {});
@@ -580,7 +657,7 @@ function Chatbot({ getPortfolioData }) {
         <div className="chat-messages" ref={messagesRef} aria-live="polite" aria-busy={sending}>
           {activeThread?.messages.map(message => <div className={`chat-row is-${message.role}`} key={message.id}>
             <div className="chat-bubble">
-              <p><Typewriter text={message.content} active={message.id === animatingId} onDone={() => setAnimatingId(null)} /></p>
+              <p><Typewriter text={displayMessageContent(message)} active={message.id === animatingId} onDone={() => setAnimatingId(null)} /></p>
               {message.offerContact ? <button className="chat-inline-contact" type="button" onClick={openContactForm}>Enviar mensagem <Icon name="send" /></button> : null}
               {message.contactConfirmation && contactDraft?.threadId === activeId && contactDraft.step === 'confirm' ? <div className="chat-confirm-actions">
                 <button type="button" onClick={() => send('Sim')}>Enviar agora <Icon name="send" /></button>

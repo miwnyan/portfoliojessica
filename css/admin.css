@@ -854,6 +854,30 @@ img, svg { display: block; max-width: 100%; }
 .upload-progress { width: 100%; height: 5px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: #251c25; }
 .upload-progress > span { display: block; width: var(--upload-progress, 0%); height: 100%; border-radius: inherit; background: var(--admin-accent); transition: width .2s ease; }
 
+.preset-media-picker { display: grid; gap: 9px; margin-top: 12px; }
+.preset-media-picker > span { color: var(--admin-muted); font-size: 11px; }
+.preset-media-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.preset-media-grid-library { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.preset-media-option {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: 9px;
+  color: var(--admin-muted-strong);
+  background: #0b090c;
+  font: inherit;
+  font-size: 10px;
+  text-align: left;
+  text-decoration: none;
+}
+.preset-media-option img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 6px; background: #080708; }
+.preset-media-option span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preset-media-option:hover, .preset-media-option.is-selected { border-color: var(--admin-accent); color: var(--admin-text); background: rgba(239, 173, 208, .075); }
+.preset-media-option.is-selected { box-shadow: inset 0 0 0 1px var(--admin-accent); }
+
 .theme-preview {
   min-height: 210px;
   padding: 24px;
@@ -1042,6 +1066,7 @@ img, svg { display: block; max-width: 100%; }
   .folder-group-header > .row-actions { grid-column: 2 / -1; justify-content: flex-start; }
   .folder-skills-list .entity-row { grid-template-columns: 32px 52px minmax(0, 1fr); padding-left: 12px; }
   .media-card { grid-template-columns: 1fr; }
+  .preset-media-grid, .preset-media-grid-library { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .media-preview { min-height: 145px; }
   .icon-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .admin-dialog { width: 100%; max-width: none; max-height: calc(100vh - 18px); margin: 18px 0 0; border-radius: 16px 16px 0 0; }
@@ -1059,6 +1084,7 @@ img, svg { display: block; max-width: 100%; }
   .topbar-actions .button-primary { font-size: 0; }
   .topbar-actions .button-primary::after { content: "Salvar"; font-size: 12px; }
   .icon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .preset-media-grid, .preset-media-grid-library { grid-template-columns: 1fr; }
   .page-heading-actions { display: grid; grid-template-columns: 1fr; }
 }
 

@@ -81,6 +81,26 @@ with sync_playwright() as playwright:
     desktop.get_by_role("button", name="Enviar pergunta").click()
     desktop.get_by_text("Não consegui entender ainda.", exact=False).wait_for(timeout=8000)
 
+    desktop.get_by_role("button", name="Nova conversa").click()
+    requests_before_flexible_contact = len(chat_requests)
+    desktop.locator("#portfolio-chat-input").fill("Envie uma mensagem para a Jéssica no email dela, a mensagem é Olá")
+    desktop.get_by_role("button", name="Enviar pergunta").click()
+    desktop.get_by_text("Qual e-mail", exact=False).wait_for(timeout=8000)
+    assert desktop.get_by_text("O que você gostaria de dizer", exact=False).count() == 0
+    assert len(chat_requests) == requests_before_flexible_contact
+
+    desktop.get_by_role("button", name="Nova conversa").click()
+    desktop.locator("#portfolio-chat-input").fill("Mensagem: olá")
+    desktop.get_by_role("button", name="Enviar pergunta").click()
+    desktop.get_by_text("Qual e-mail", exact=False).wait_for(timeout=8000)
+    assert len(chat_requests) == requests_before_flexible_contact
+
+    desktop.get_by_role("button", name="Nova conversa").click()
+    desktop.locator("#portfolio-chat-input").fill("me mostra os projetu")
+    desktop.get_by_role("button", name="Enviar pergunta").click()
+    desktop.get_by_text("Os projetos em destaque são", exact=False).wait_for(timeout=8000)
+    assert len(chat_requests) == requests_before_flexible_contact
+
     sent_contact = {}
     chat_requests_before_contact = len(chat_requests)
     def mock_contact(route):

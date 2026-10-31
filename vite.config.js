@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import chatHandler from './api/chat.js';
 import contactHandler from './api/contact.js';
-import adminChatHandler from './api/admin-chat.js';
+import cloudinarySignatureHandler from './api/cloudinary-signature.js';
+import { resolveCloudinaryServerConfig } from './api/cloudinary-config.js';
 
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -15,6 +16,14 @@ const PRIVATE_RUNTIME_KEYS = [
   'FIREBASE_PROJECT_ID',
   'VITE_FIREBASE_API_KEY',
   'VITE_FIREBASE_PROJECT_ID',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_UPLOAD_PRESET',
+  'CLOUDINARY_SIGNED_UPLOAD_PRESET',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+  'CLOUDINARY_URL',
+  'VITE_CLOUDINARY_CLOUD_NAME',
+  'VITE_CLOUDINARY_UPLOAD_PRESET',
   'SMTP_HOST',
   'SMTP_PORT',
   'SMTP_SECURE',
@@ -95,23 +104,14 @@ function copyStableAssets() {
 function localAppRoutes(mode) {
   const environment = loadEnv(mode, rootDirectory, '');
   exposePrivateRuntimeEnvironment(environment);
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-    || process.env.VITE_CLOUDINARY_CLOUD_NAME
-    || environment.CLOUDINARY_CLOUD_NAME
-    || environment.VITE_CLOUDINARY_CLOUD_NAME
-    || '';
-  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET
-    || process.env.VITE_CLOUDINARY_UPLOAD_PRESET
-    || environment.CLOUDINARY_UPLOAD_PRESET
-    || environment.VITE_CLOUDINARY_UPLOAD_PRESET
-    || '';
+  const cloudinary = resolveCloudinaryServerConfig({ ...environment, ...process.env });
   const rewriteAdmin = middlewares => {
     middlewares.use(async (request, response, next) => {
       const [pathname, query = ''] = String(request.url || '').split('?');
       const apiHandler = pathname === '/api/chat'
         ? chatHandler
-        : pathname === '/api/admin-chat'
-          ? adminChatHandler
+        : pathname === '/api/cloudinary-signature'
+          ? cloudinarySignatureHandler
           : pathname === '/api/contact'
             ? contactHandler
             : null;
@@ -139,9 +139,11 @@ function localAppRoutes(mode) {
         response.setHeader('Cache-Control', 'no-store');
         response.end(JSON.stringify({
           cloudinary: {
-            configured: Boolean(cloudName && uploadPreset),
-            cloudName,
-            uploadPreset
+            configured: cloudinary.unsignedAvailable || cloudinary.signedAvailable,
+            unsignedAvailable: cloudinary.unsignedAvailable,
+            signedAvailable: cloudinary.signedAvailable,
+            cloudName: cloudinary.cloudName,
+            uploadPreset: cloudinary.uploadPreset
           }
         }));
         return;
